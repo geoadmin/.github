@@ -1,0 +1,17 @@
+autolabeler:
+  - label: 'new-release'
+    branch:
+      - 'develop'
+  - label: 'data-integration'
+    branch:
+      - '/data-.+/'
+  - label: 'bug'
+    branch:
+      - '/bug-.+/'
+      - '/bugfix-.+/'
+      - '/fix-.+/'
+  - label: 'feature'
+    branch:
+      - '/feature-.+/'
+      - '/feat-.+/'
+template: '# Labeler'

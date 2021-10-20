@@ -1,0 +1,8 @@
+{
+    "name": "Geoadmin PR Auto Labeler Workflow",
+    "description": "PR auto labeler workflow template for Geoadmin project.",
+    "iconName": "pr-labeler-icon",
+    "categories": [
+        "JavaScript", "TypeScript", "Python"
+    ]
+}
