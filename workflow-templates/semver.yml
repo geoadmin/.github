@@ -1,0 +1,11 @@
+name: Bump SemVer version
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+
+jobs:
+  tagging:
+    uses: geoadmin/.github/.github/workflows/semver.yml@master
