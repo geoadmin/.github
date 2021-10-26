@@ -1,14 +1,8 @@
 {
     "name": "Geoadmin SemVer Workflow",
-    "description": "SemVer versioning workflow template.",
+    "description": "SemVer versioning workflow template for Geoadmin project.",
     "iconName": "semver-icon",
     "categories": [
-        "JavaScript", "Python"
-    ],
-    "filePatterns": [
-        "**/*.py",
-        "package.json$",
-        "^Dockerfile",
-        ".*\\.md$"
+        "JavaScript", "TypeScript", "Python"
     ]
 }

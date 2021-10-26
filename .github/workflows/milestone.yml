@@ -1,4 +1,4 @@
-name: SemVer Release Reusable Workflow
+name: Milestone Release Reusable Workflow
 
 on:
   workflow_call:
@@ -7,21 +7,16 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: '10'
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    # Details and Docu
-    # https://github.com/anothrNick/github-tag-action
-    # https://github.com/geoadmin/doc-guidelines/blob/master/GIT_FLOW.md#versioning
-    - name: Bump version and push tag
+    - name: Bump Milestone Tag
       id: tagging
-      uses: anothrNick/github-tag-action@1.33.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: true
-        RELEASE_BRANCHES: master
-        TAG_CONTEXT: repo
+      uses: geoadmin/action-milestone-tag@v1.0.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_tag: '${MILESTONE}_rc${TAG_NUMBER}'
+        milestone_pattern: '\d{4}-\d{2}-\d{2}'
 
     # Drafts your next Release notes as Pull Requests are merged into "master"
     - name: Create Release with Release Notes
