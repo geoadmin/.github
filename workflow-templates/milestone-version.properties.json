@@ -1,0 +1,8 @@
+{
+    "name": "Geoadmin Milestone Version Workflow",
+    "description": "Milestone versioning workflow template for Geoadmin project.",
+    "iconName": "milestone-version-icon",
+    "categories": [
+        "JavaScript", "TypeScript", "Python"
+    ]
+}

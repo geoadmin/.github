@@ -12,7 +12,7 @@ jobs:
 
     - name: Bump Milestone Tag
       id: tagging
-      uses: geoadmin/action-milestone-tag@v1.0.0
+      uses: geoadmin/action-milestone-tag@v0.1.0-beta.4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         custom_tag: '${MILESTONE}_rc${TAG_NUMBER}'
