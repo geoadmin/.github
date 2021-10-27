@@ -2,8 +2,10 @@ name: PR Auto Labeler
 
 on:
   pull_request:
-    types: [opened]
+    types:
+      - opened
+      - edited
 
 jobs:
-  release:
+  pr-labeler:
     uses: geoadmin/.github/.github/workflows/pr-labeler.yml@master

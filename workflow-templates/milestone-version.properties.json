@@ -1,7 +1,7 @@
 {
-    "name": "Geoadmin Milestone Version Workflow",
-    "description": "Milestone versioning workflow template for Geoadmin project.",
-    "iconName": "milestone-version-icon",
+    "name": "Milestone Version & Release Workflow",
+    "description": "Milestone versioning and release workflow template for Geoadmin project.",
+    "iconName": "geoadmin-logo",
     "categories": [
         "JavaScript", "TypeScript", "Python"
     ]

@@ -1,12 +1,12 @@
 name: Bump Milestone Version
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - master
-      - develop
-      - develop-*
 
 jobs:
   release:
-    uses: geoadmin/.github/.github/workflows/milestone.yml@master
+    uses: geoadmin/.github/.github/workflows/milestone-release.yml@master

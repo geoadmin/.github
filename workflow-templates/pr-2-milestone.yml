@@ -1,0 +1,11 @@
+name: Add Milestone to PR
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+
+jobs:
+  add-to-milestone:
+    uses: geoadmin/.github/.github/workflows/pr-2-milestone.yml@master

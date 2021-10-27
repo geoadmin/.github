@@ -1,7 +1,8 @@
 autolabeler:
   - label: 'new-release'
     branch:
-      - 'develop'
+      - '/develop/'
+      - '/develop-.+/'
   - label: 'data-integration'
     branch:
       - '/data-.+/'

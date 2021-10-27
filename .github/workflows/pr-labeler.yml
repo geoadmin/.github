@@ -1,5 +1,13 @@
 name: PR Auto-Labeler Reusable Workflow
 
+# Auto labeled PR based on HEAD branch name.
+
+# Usage example:
+# on:
+#   pull_request:
+#     types:
+#       - opened
+
 on:
   workflow_call:
 

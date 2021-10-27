@@ -1,0 +1,8 @@
+{
+    "name": "Create Milestone Workflow",
+    "description": "Create milestone template for Geoadmin project. The milestone is created on branch create event and is based on the branch name",
+    "iconName": "geoadmin-logo",
+    "categories": [
+        "JavaScript", "TypeScript", "Python"
+    ]
+}

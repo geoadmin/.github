@@ -1,0 +1,37 @@
+name: Add Pull Request to Milestone
+
+# Attach PR to milestone based on branch names
+
+# Usage example:
+# on:
+#   pull_request:
+#     types:
+#       - opened
+#       - edited
+
+# jobs:
+#   add-to-milestone:
+#     uses: geoadmin/.github/.github/workflows/pr-2-milestone.yml@master
+
+
+on:
+  workflow_call:
+
+jobs:
+  add-to-milestone:
+    name: Add Pull Request to Milestone
+    runs-on: ubuntu-latest
+    steps:
+      - name: action-path
+        run: |
+          echo "GITHUB_ACTION_PATH = ${GITHUB_ACTION_PATH}"
+          echo "GITHUB_ACTION = ${GITHUB_ACTION}"
+          echo "GITHUB_REPOSITORY = ${GITHUB_REPOSITORY}"
+          echo "GITHUB_EVENT_PATH = ${GITHUB_EVENT_PATH}"
+          echo "github.repository = "${{ github.repository }}
+          echo "env.GITHUB_REPOSITORY = ${{ env.GITHUB_REPOSITORY}}"
+      - uses: iyu/actions-milestone@v1.1.0
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/pr-2-milestone-config.yml@master
+          configuration-repo: geoadmin/.github

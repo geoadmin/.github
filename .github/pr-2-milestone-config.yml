@@ -1,4 +1,5 @@
 base-branch:
-  - "data-(\\d{4}-\\d{2}-\\d{2})"
+  - "develop-(\\d{4}-\\d{2}-\\d{2})"
 
 head-branch:
+  - "develop-(\\d{4}-\\d{2}-\\d{2})"
