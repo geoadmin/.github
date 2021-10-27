@@ -8,4 +8,4 @@ on:
 
 jobs:
   pr-labeler:
-    uses: geoadmin/.github/.github/workflows/pr-labeler.yml@master
+    uses: geoadmin/tool-github-workflows/.github/workflows/pr-labeler.yml@master

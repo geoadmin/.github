@@ -8,4 +8,4 @@ on:
 
 jobs:
   add-to-milestone:
-    uses: geoadmin/.github/.github/workflows/pr-2-milestone.yml@master
+    uses: geoadmin/tool-github-workflows/.github/workflows/pr-2-milestone.yml@master

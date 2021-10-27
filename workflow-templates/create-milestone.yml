@@ -5,4 +5,4 @@ on:
 
 jobs:
   create-milestone:
-    uses: geoadmin/.github/.github/workflows/create-milestone.yml@master
+    uses: geoadmin/tool-github-workflows/.github/workflows/create-milestone.yml@master

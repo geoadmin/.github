@@ -8,4 +8,4 @@ on:
 
 jobs:
   release:
-    uses: geoadmin/.github/.github/workflows/semver.yml@master
+    uses: geoadmin/tool-github-workflows/.github/workflows/semver.yml@master
