@@ -1,6 +1,6 @@
 {
     "name": "Milestone Version & Release Workflow",
-    "description": "Milestone versioning and release workflow template for Geoadmin project.",
+    "description": "Milestone versioning and release workflow template for Geoadmin project. This tags the master branch on PR merge with `YYYY-MM-DD-rcX`.",
     "iconName": "geoadmin-logo",
     "categories": [
         "JavaScript", "TypeScript", "Python"
