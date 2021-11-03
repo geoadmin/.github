@@ -1,0 +1,59 @@
+name: Milestone Release Reusable Workflow
+
+# Tag and create a Release for milestone workflow. The repository is tagged
+# based on the milestone title which should be in the form YYYY-MM-DD. The
+# tag is then <MILESTONE>_RC<X> where X is a milestone build number starting from 1.
+# The github release is then generated with release notes. The release notes are
+# generated from the PR titles.
+
+# Usage example
+# on:
+#   pull_request:
+#     types:
+#       - closed
+#     branches:
+#       - master
+
+# jobs:
+#   release:
+#     uses: geoadmin/.github/.github/workflows/milestone-release.yml@master
+
+on:
+  workflow_call:
+
+jobs:
+  milestone-release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check event name
+      run: |
+        echo "Event is ${{ github.event_name }}"
+        if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+          echo "::error::Milestone Release Workflow can only be used with pull_request event"
+          exit 1
+        fi
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Bump Milestone Tag
+      id: tagging
+      uses: geoadmin/action-milestone-tag@v1.0.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_tag: '${MILESTONE}_rc${TAG_NUMBER}'
+        milestone_pattern: '\d{4}-\d{2}-\d{2}'
+
+    # Drafts your next Release notes as Pull Requests are merged into "master"
+    - name: Create Release with Release Notes
+      uses: release-drafter/release-drafter@v5
+      if: ${{ github.base_ref == 'master' }}
+      with:
+        config-name: release-drafter-config.yml
+        disable-autolabeler: true
+        publish: true
+        tag: ${{ steps.tagging.outputs.new_tag }}
+        version: ${{ steps.tagging.outputs.new_tag }}
+        name: ${{ steps.tagging.outputs.new_tag }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,42 @@
+name: Create Milestone from branch name Reusable Workflow
+
+# If the branch name match the milestone branch pattern develop-YYYY-MM-DD, then the milestone
+# name YYYY-MM-DD is created if it not already exists.
+#
+# Usage example
+#--------------
+# on:
+#  create:
+#
+#jobs:
+#  create-milestone:
+#    uses: geoadmin/.github/.github/workflows/create-milestone.yml@master
+
+on:
+  workflow_call:
+
+jobs:
+  create-milestone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Milestone from branch name
+        id: get-milestone
+        shell: bash
+        run: |
+            echo "::notice::Branch ${GITHUB_REF} created"
+            branch_prefix=develop-
+            pattern=^refs/heads/${branch_prefix}[0-9]{4}-[0-9]{2}-[0-9]{2}$
+            if [[ "${GITHUB_REF}" =~ $pattern ]]; then
+              echo "::notice::${GITHUB_REF} is a milestone branch"
+              milestone=${GITHUB_REF#refs/heads/${branch_prefix}}
+              echo "::set-output name=milestone::${milestone}"
+              echo "::notice::Milestone is ${milestone}"
+            fi
+
+      - name: Create Milestone if it not exists
+        if: ${{ steps.get-milestone.outputs.milestone }}
+        uses: "sv-tools/create-milestone-action@v1.1.0"
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: ${{ steps.get-milestone.outputs.milestone }}
+          due_on: ${{ steps.get-milestone.outputs.milestone}}T17:00:00Z

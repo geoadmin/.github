@@ -1,0 +1,32 @@
+name: Add Pull Request to Milestone
+
+# Attach PR to milestone based on branch names. The milestone is taken first from the PR base branch
+# if it match or from the PR head branch. When no branch matches then no milestone is attached.
+# See geoadmin/.github/.github/pr-2-milestone-config.yml configuration fot the branch
+# regular expressions.
+
+# Usage example:
+# on:
+#   pull_request:
+#     types:
+#       - opened
+#       - edited
+
+# jobs:
+#   add-to-milestone:
+#     uses: geoadmin/.github/.github/workflows/pr-2-milestone.yml@master
+
+
+on:
+  workflow_call:
+
+jobs:
+  add-to-milestone:
+    name: Add Pull Request to Milestone
+    runs-on: ubuntu-latest
+    steps:
+      - uses: iyu/actions-milestone@v1.1.0
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/pr-2-milestone-config.yml@master
+          configuration-repo: geoadmin/.github

@@ -9,4 +9,4 @@ on:
 
 jobs:
   release:
-    uses: geoadmin/tool-github-workflows/.github/workflows/milestone-release.yml@master
+    uses: geoadmin/.github/.github/workflows/milestone-release.yml@master

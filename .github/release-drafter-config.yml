@@ -1,0 +1,26 @@
+categories:
+  - title: 'Features'
+    labels:
+      - 'feature'
+      - 'enhancement'
+  - title: 'Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: 'Data Integration'
+    label:
+      - 'data'
+      - 'data-integration'
+exclude-labels:
+  - 'skip-changelog'
+  - 'skip-rn'
+  - 'skip-release-note'
+  - 'new-release'
+replacers:
+  - search: /(BGDIINF_SB-\d+)\s*[:\-/;\\]*\s*/g
+    replace: '[$1](https://jira.swisstopo.ch/browse/$1) - '
+change-template: '- #$NUMBER - $TITLE'
+change-title-escapes: '\<*&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+template: |
+  $CHANGES
