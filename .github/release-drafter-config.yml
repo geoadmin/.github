@@ -16,6 +16,9 @@ exclude-labels:
   - 'skip-changelog'
   - 'skip-rn'
   - 'skip-release-note'
+  - 'no-release-note'
+  - 'no-rn'
+  - 'no-changelog'
   - 'new-release'
 replacers:
   - search: /(BGDIINF_SB-\d+)\s*[:\-/;\\]*\s*/g

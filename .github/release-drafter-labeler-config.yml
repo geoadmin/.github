@@ -15,4 +15,7 @@ autolabeler:
     branch:
       - '/feature-.+/'
       - '/feat-.+/'
+  - label: 'skip-release-note'
+    branch:
+      - '/update_README\.md/'
 template: '# Labeler'
