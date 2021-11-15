@@ -18,4 +18,6 @@ autolabeler:
   - label: 'skip-release-note'
     branch:
       - '/update_README\.md/'
+      - '/norn-.+/'
+      - '/skiprn-.+/'
 template: '# Labeler'
