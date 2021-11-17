@@ -1,0 +1,62 @@
+name: PR Auto Milestone Release Title Reusable Workflow
+
+# Auto PR Release Title. When creating a Release or Hotfix, the PR title is automatically set.
+#
+# For new release (develop-* -> master PR) the title is set to `New Release <next-version>`
+#
+# For hotfix (hotfix-* -> master PR) the title is set to `<next-version> - <original-title>`
+
+# Usage example:
+# on:
+#   pull_request:
+#     types:
+#       - opened
+#       - reopened
+#       - synchronize
+#       - edited
+#     branches:
+#       - master
+
+on:
+  workflow_call:
+
+jobs:
+  pr-release-title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        if: ${{ github.base_ref == 'master' }}
+        with:
+          fetch-depth: 0
+          ref: master
+
+      - name: Get PR Infos
+        if: ${{ github.base_ref == 'master' }}
+        id: pr_infos
+        uses: Brymastr/pr-info-action@v1
+
+      - name: Bump version (without tagging)
+        id: get_tag
+        if: ${{ github.base_ref == 'master' }}
+        uses: geoadmin/action-milestone-tag@v1.1.0
+          with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            custom_tag: '${MILESTONE}_rc${TAG_NUMBER}'
+            milestone_pattern: '\d{4}-\d{2}-\d{2}'
+            dry_run: true
+
+      - name: Set `New Release` PR title if needed
+        if: ${{ github.base_ref == 'master' && github.head_ref == 'develop' }}
+        uses: juztcode/pr-updater@1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "New Release ${{ steps.get_tag.outputs.new_tag }}"
+          body: ${{ steps.pr_infos.outputs.body }}
+
+      - name: Set `Hotfix` PR title if needed
+        if: ${{ github.base_ref == 'master' && github.head_ref != 'develop' }}
+        uses: juztcode/pr-updater@1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "${{ steps.get_tag.outputs.new_tag }} - ${{ steps.pr_infos.outputs.title }}"
+          body: ${{ steps.pr_infos.outputs.body }}

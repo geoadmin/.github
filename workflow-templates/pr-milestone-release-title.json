@@ -1,0 +1,8 @@
+{
+    "name": "PR New Milestone Release Auto Title Workflow",
+    "description": "PR New Milestone Release Auto Title workflow template for Geoadmin project. This template automatically sets the PR title for new Milestone release.",
+    "iconName": "geoadmin-logo",
+    "categories": [
+        "JavaScript", "TypeScript", "Python"
+    ]
+}
