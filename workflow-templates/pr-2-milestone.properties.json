@@ -1,8 +1,0 @@
-{
-    "name": "Attach PR to Milestone Workflow",
-    "description": "Attach Pull Request to a milestone template for Geoadmin project. The milestone is defined from the branch names of the PR.",
-    "iconName": "geoadmin-logo",
-    "categories": [
-        "JavaScript", "TypeScript", "Python"
-    ]
-}

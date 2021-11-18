@@ -1,4 +1,4 @@
-name: PR Auto SemVer Release Title Reusable Workflow
+name: PR Auto Label and SemVer Release Title Reusable Workflow
 
 # Auto PR Release Title. When creating a Release or Hotfix, the PR title is automatically set.
 #
@@ -7,6 +7,9 @@ name: PR Auto SemVer Release Title Reusable Workflow
 # By default bump-type if not specified or found is set to minor.
 #
 # For hotfix (hotfix-* -> master PR) the title is set to `<next-version> - <original-title> - <bump-type>`
+#
+# Finally add a Label to the PR based on HEAD branch name. These labels are then used to categorize
+# the release notes.
 
 # Usage example:
 # on:
@@ -16,25 +19,23 @@ name: PR Auto SemVer Release Title Reusable Workflow
 #       - reopened
 #       - synchronize
 #       - edited
-#     branches:
-#       - master
 
 on:
   workflow_call:
 
 jobs:
   pr-release-title:
+    name: Set PR title
     runs-on: ubuntu-latest
+    if: ${{ github.base_ref == 'master' }}
     steps:
       - uses: actions/checkout@v2
-        if: ${{ github.base_ref == 'master' }}
         with:
           fetch-depth: 0
           ref: master
 
       # This step is needed in order for the anothrNick/github-tag-action@1.33.0 action to work properly
       - name: Do the merge but don't push it
-        if: ${{ github.base_ref == 'master' }}
         run: |
           cd ${GITHUB_WORKSPACE}
           git config user.email "github@swisstopo.ch"
@@ -43,12 +44,10 @@ jobs:
           git merge ${{ github.head_ref }} --no-ff
 
       - name: Get PR Infos
-        if: ${{ github.base_ref == 'master' }}
         id: pr_infos
         uses: Brymastr/pr-info-action@v1
 
       - name: Get Bump Type and PR Title
-        if: ${{ github.base_ref == 'master' }}
         id: bump_type
         run: |
           bump_type=minor
@@ -89,7 +88,6 @@ jobs:
 
       - name: Bump version (without tagging)
         id: get_tag
-        if: ${{ github.base_ref == 'master' }}
         uses: anothrNick/github-tag-action@1.33.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -100,7 +98,7 @@ jobs:
           DRY_RUN: true
 
       - name: Set `New Release` PR title if needed
-        if: ${{ github.base_ref == 'master' && github.head_ref == 'develop' }}
+        if: ${{ github.head_ref == 'develop' }}
         uses: juztcode/pr-updater@1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -108,9 +106,23 @@ jobs:
           body: ${{ steps.pr_infos.outputs.body }}
 
       - name: Set `Hotfix` PR title if needed
-        if: ${{ github.base_ref == 'master' && github.head_ref != 'develop' }}
+        if: ${{ github.head_ref != 'develop' }}
         uses: juztcode/pr-updater@1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: "${{ steps.get_tag.outputs.new_tag }} - ${{ steps.bump_type.outputs.pr_title }} - #${{ steps.bump_type.outputs.bump }}"
           body: ${{ steps.pr_infos.outputs.body }}
+
+  pr-labeler:
+    name: Set PR label
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Auto Labeler
+        uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-labeler-config.yml
+          disable-autolabeler: false
+          disable-releaser: true
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

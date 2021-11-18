@@ -23,6 +23,7 @@ on:
 
 jobs:
   milestone-release:
+    name: Release Milestone
     runs-on: ubuntu-latest
     steps:
     - name: Check event name
@@ -38,7 +39,7 @@ jobs:
 
     - name: Bump Milestone Tag
       id: tagging
-      uses: geoadmin/action-milestone-tag@v1.0.0
+      uses: geoadmin/action-milestone-tag@v1.2.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         custom_tag: '${MILESTONE}_rc${TAG_NUMBER}'

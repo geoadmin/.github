@@ -1,0 +1,8 @@
+{
+    "name": "PR New SemVer Release Auto Title and auto label Workflow",
+    "description": "PR New SemVer Release Auto Title workflow template for Geoadmin project. This template automatically sets the PR title for new SemVer release. Finally it also set label.",
+    "iconName": "geoadmin-logo",
+    "categories": [
+        "JavaScript", "TypeScript", "Python"
+    ]
+}

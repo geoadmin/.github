@@ -1,0 +1,8 @@
+{
+    "name": "Attach PR to Milestone, set PR label and set PR title Workflow",
+    "description": "Attach Pull Request to a milestone template for Geoadmin project. The milestone is defined from the branch names of the PR. Then if the PR is merged into master, set the PR title. Finally set the PR label",
+    "iconName": "geoadmin-logo",
+    "categories": [
+        "JavaScript", "TypeScript", "Python"
+    ]
+}

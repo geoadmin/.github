@@ -1,8 +1,0 @@
-{
-    "name": "PR Auto Labeler Workflow",
-    "description": "PR auto labeler workflow template for Geoadmin project. This template add PR label based on head branch name.",
-    "iconName": "geoadmin-logo",
-    "categories": [
-        "JavaScript", "TypeScript", "Python"
-    ]
-}
