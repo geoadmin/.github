@@ -17,6 +17,7 @@ on:
 
 jobs:
   create-milestone:
+    name: Create Milestone
     runs-on: ubuntu-latest
     steps:
       - name: Get Milestone from branch name

@@ -4,5 +4,5 @@ on:
   create:
 
 jobs:
-  create-milestone:
+  milestone:
     uses: geoadmin/.github/.github/workflows/create-milestone.yml@master

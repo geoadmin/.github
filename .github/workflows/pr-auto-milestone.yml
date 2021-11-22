@@ -1,0 +1,94 @@
+name: PR Auto Label, Milestone and Title Reusable Workflow
+
+# Attach PR to milestone based on branch names. The milestone is taken first from the PR base branch
+# if it match or from the PR head branch. When no branch matches then no milestone is attached.
+# See geoadmin/.github/.github/pr-2-milestone-config.yml configuration fot the branch
+# regular expressions.
+#
+# Then automatically set the PR Title for new releases (merge into master branch).
+#   - For new release (develop-* -> master PR) the title is set to `New Release <next-version>`
+#   - For hotfix (hotfix-* -> master PR) the title is set to `<next-version> - <original-title>`
+#
+# Finally add a Label to the PR based on HEAD branch name. These labels are then used to categorize
+# the release notes.
+
+
+# Usage example:
+# on:
+#   pull_request:
+#     types:
+#       - opened
+#       - reopened
+#       - synchronize
+#       - edited
+
+on:
+  workflow_call:
+
+jobs:
+  add-milestone:
+    name: Add PR to Milestone
+    runs-on: ubuntu-latest
+    outputs:
+      milestone: ${{ steps.action_milestone.outputs.milestone }}
+    steps:
+      - id: action_milestone
+        uses: iyu/actions-milestone@v1.1.0
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/pr-2-milestone-config.yml@master
+          configuration-repo: geoadmin/.github
+
+  set-title:
+    needs: add-milestone
+    name: Set PR title
+    runs-on: ubuntu-latest
+    if: ${{ github.base_ref == 'master' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get PR Infos
+        id: pr_infos
+        uses: Brymastr/pr-info-action@v1
+
+      - name: Bump version (without tagging)
+        id: get_tag
+        uses: geoadmin/action-milestone-tag@v1.2.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: '${MILESTONE}_rc${TAG_NUMBER}'
+          milestone_pattern: '\d{4}-\d{2}-\d{2}'
+          milestone: "${{ needs.add-milestone.outputs.milestone }}"
+          dry_run: true
+
+      - name: Set `New Release` PR title if needed
+        if: ${{ startsWith(github.head_ref, 'develop-') }}
+        uses: juztcode/pr-updater@1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "New Release ${{ steps.get_tag.outputs.new_tag }}"
+          body: ${{ steps.pr_infos.outputs.body }}
+
+      - name: Set `Hotfix` PR title if needed
+        if: ${{ !startsWith(github.head_ref, 'develop-') }}
+        uses: juztcode/pr-updater@1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "${{ steps.get_tag.outputs.new_tag }} - ${{ steps.pr_infos.outputs.title }}"
+          body: ${{ steps.pr_infos.outputs.body }}
+
+  pr-labeler:
+    name: Set PR label
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Auto Labeler
+        uses: release-drafter/release-drafter@v5
+        with:
+          config-name: release-drafter-labeler-config.yml
+          disable-autolabeler: false
+          disable-releaser: true
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
