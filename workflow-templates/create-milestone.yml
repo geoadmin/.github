@@ -1,4 +1,4 @@
-name: Create Milestone if needed
+name: on-create
 
 on:
   create:

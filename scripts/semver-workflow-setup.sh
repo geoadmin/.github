@@ -25,6 +25,7 @@ do
     pushd ~/repositories/"${repo}" || exit
     git checkout develop || exit
     git pull || exit
+    git status --porcelain && echo "local changes on develop, exiting..."; exit
     git checkout -b ${branch_name} || exit
     echo "--------------------------------------------------------------------"
 done
@@ -39,12 +40,22 @@ case "$answer" in
 esac
 
 read -r -d '' MSG << EOM
-Consolidate PR workflows
+Renamed the workflow templates
 
-Now the PR set Title and PR labeler are inside the same workflow. This speed up
-a little bit the execution but moreover it simplify the maintenance of the workflows.
+The main workflow file parameter `name` is used in the github PR check
+section as prefix to display every actions. In order to keep this display
+a bit cleaner and short we use a shorter name.
 
-Also added proper job names that are displayed inside the PR.
+e.g changed such display:
+
+`PR New SemVer Release Auto Title / pr-edit / Set PR title (pull_request)`
+`PR New SemVer Release Auto Title / pr-edit / Set PR label
+(pull_request)`
+
+to
+
+`on-pr / pr-edit / Set PR title (pull_request)`
+`on-pr / pr-edit / Set PR label (pull_request)`
 EOM
 
 for repo in "${repository[@]}"
@@ -52,7 +63,6 @@ do
     echo "Entering repositories/${repo}"
     pushd ~/repositories/"${repo}" || exit
     git checkout ${branch_name} || exit
-    # rm -f .github/workflows/*
     cp ~/repositories/geoadmin.github/workflow-templates/semver.yml .github/workflows/ || exit
     cp ~/repositories/geoadmin.github/workflow-templates/pr-auto-semver.yml .github/workflows/ || exit
     git add --all .github/workflows/ || exit
