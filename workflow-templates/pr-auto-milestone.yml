@@ -1,4 +1,4 @@
-name: PR Milestone Auto Edit
+name: on-pr
 
 on:
   pull_request:
