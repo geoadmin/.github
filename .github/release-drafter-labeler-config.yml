@@ -5,19 +5,19 @@ autolabeler:
       - '/develop-.+/'
   - label: 'data-integration'
     branch:
-      - '/data-.+/'
+      - '/data[-_].+/'
   - label: 'bug'
     branch:
-      - '/bug-.+/'
-      - '/bugfix-.+/'
-      - '/fix-.+/'
+      - '/bug[-_].+/'
+      - '/bugfix[-_].+/'
+      - '/fix[-_].+/'
   - label: 'feature'
     branch:
-      - '/feature-.+/'
-      - '/feat-.+/'
+      - '/feature[-_].+/'
+      - '/feat[-_].+/'
   - label: 'skip-release-note'
     branch:
       - '/update_README\.md/'
-      - '/norn-.+/'
-      - '/skiprn-.+/'
+      - '/norn[-_].+/'
+      - '/skiprn[-_].+/'
 template: '# Labeler'
