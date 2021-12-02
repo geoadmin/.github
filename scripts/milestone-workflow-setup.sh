@@ -18,7 +18,12 @@ do
     pushd ~/repositories/"${repo}" || exit
     git checkout master || exit
     git pull || exit
-    git status --porcelain && echo "local changes on master, exiting..."; exit
+    local_changes=$(git status --porcelain)
+    if [ -n "${local_changes}" ]; then
+        echo "${local_changes}"
+        echo "local changes on develop, exiting..."
+        exit
+    fi
     git checkout -b ${branch_name} || exit
     echo "--------------------------------------------------------------------"
 done
