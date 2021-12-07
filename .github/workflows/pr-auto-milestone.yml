@@ -71,14 +71,6 @@ jobs:
           title: "New Release ${{ steps.get_tag.outputs.new_tag }}"
           body: ${{ steps.pr_infos.outputs.body }}
 
-      - name: Set `Hotfix` PR title if needed
-        if: ${{ steps.get_tag.outputs.new_tag != '' && !startsWith(github.head_ref, 'develop-') }}
-        uses: juztcode/pr-updater@1.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "${{ steps.get_tag.outputs.new_tag }} - ${{ steps.pr_infos.outputs.title }}"
-          body: ${{ steps.pr_infos.outputs.body }}
-
   pr-labeler:
     name: Set PR label
     runs-on: ubuntu-latest
