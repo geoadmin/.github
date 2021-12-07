@@ -110,7 +110,7 @@ jobs:
         uses: juztcode/pr-updater@1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "${{ steps.get_tag.outputs.new_tag }} - ${{ steps.bump_type.outputs.pr_title }} - #${{ steps.bump_type.outputs.bump }}"
+          title: "${{ steps.bump_type.outputs.pr_title }} - #${{ steps.bump_type.outputs.bump }}"
           body: ${{ steps.pr_infos.outputs.body }}
 
   pr-labeler:

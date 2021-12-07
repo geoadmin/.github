@@ -8,6 +8,9 @@ categories:
       - 'fix'
       - 'bugfix'
       - 'bug'
+  - title: 'Hot Fixes'
+    labels:
+      - 'hotfix'
   - title: 'Data Integration'
     label:
       - 'data'

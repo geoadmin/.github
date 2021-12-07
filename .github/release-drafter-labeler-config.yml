@@ -11,6 +11,10 @@ autolabeler:
       - '/bug[-_].+/'
       - '/bugfix[-_].+/'
       - '/fix[-_].+/'
+  - label: 'hotfix'
+    branch:
+      - '/hotfix[-_].+'
+      - '/hot[-_].+'
   - label: 'feature'
     branch:
       - '/feature[-_].+/'
