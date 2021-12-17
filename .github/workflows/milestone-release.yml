@@ -2,7 +2,7 @@ name: Milestone Release Reusable Workflow
 
 # Tag and create a Release for milestone workflow. The repository is tagged
 # based on the milestone title which should be in the form YYYY-MM-DD. The
-# tag is then <MILESTONE>_RC<X> where X is a milestone build number starting from 1.
+# tag is then <MILESTONE>-rc<X> where X is a milestone build number starting from 1.
 # The github release is then generated with release notes. The release notes are
 # generated from the PR titles.
 
@@ -42,7 +42,7 @@ jobs:
       uses: geoadmin/action-milestone-tag@v1.2.1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        custom_tag: '${MILESTONE}_rc${TAG_NUMBER}'
+        custom_tag: '${MILESTONE}-rc${TAG_NUMBER}'
         milestone_pattern: '\d{4}-\d{2}-\d{2}'
 
     # Drafts your next Release notes as Pull Requests are merged into "master"
