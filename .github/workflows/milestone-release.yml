@@ -58,3 +58,22 @@ jobs:
         name: ${{ steps.tagging.outputs.new_tag }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Close the milestone if needed
+    - name: Get milestone name from tag
+      if: ${{ startsWith(github.head_ref, 'develop-') }}
+      id: get-milestone
+      shell: bash
+      run: |
+        tag=${{ steps.tagging.outputs.new_tag }}
+        milestone=${tag%%-rc*}
+        echo "::set-output name=milestone::${milestone}"
+        echo "::notice::Milestone is ${milestone}"
+    - name: Close the milestone if needed
+      if: ${{ startsWith(github.head_ref, 'develop-') }}
+      uses: "julb/action-manage-milestone@v1"
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        title: ${{ steps.get-milestone.outputs.milestone }}
+        state: closed
