@@ -58,7 +58,7 @@ jobs:
         uses: geoadmin/action-milestone-tag@v1.2.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: '${MILESTONE}_rc${TAG_NUMBER}'
+          custom_tag: '${MILESTONE}-rc${TAG_NUMBER}'
           milestone_pattern: '\d{4}-\d{2}-\d{2}'
           milestone: "${{ needs.add-milestone.outputs.milestone }}"
           dry_run: true
