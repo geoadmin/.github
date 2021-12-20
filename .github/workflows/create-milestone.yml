@@ -36,8 +36,10 @@ jobs:
 
       - name: Create Milestone if it not exists
         if: ${{ steps.get-milestone.outputs.milestone }}
-        uses: "sv-tools/create-milestone-action@v1.1.0"
+        uses: "julb/action-manage-milestone@v1"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           title: ${{ steps.get-milestone.outputs.milestone }}
-          due_on: ${{ steps.get-milestone.outputs.milestone}}T17:00:00Z
+          state: open
+          due_on: ${{ steps.get-milestone.outputs.milestone}}
