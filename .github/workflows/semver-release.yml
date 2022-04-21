@@ -30,11 +30,11 @@ jobs:
         fetch-depth: '10'
 
     # Details and Docu
-    # https://github.com/anothrNick/github-tag-action
+    # https://github.com/geoadmin/github-tag-action
     # https://github.com/geoadmin/doc-guidelines/blob/master/GIT_FLOW.md#versioning
     - name: Bump version and push tag
       id: tagging
-      uses: geoadmin/github-tag-action@feat-BGDIINF_SB-2357-fix-semver-with-v
+      uses: geoadmin/github-tag-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         WITH_V: true

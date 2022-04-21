@@ -34,7 +34,7 @@ jobs:
           fetch-depth: 0
           ref: master
 
-      # This step is needed in order for the anothrNick/github-tag-action@1.33.0 action to work properly
+      # This step is needed in order for the geoadmin/github-tag-action@master action to work properly
       - name: Do the merge but don't push it
         run: |
           cd ${GITHUB_WORKSPACE}
@@ -88,7 +88,7 @@ jobs:
 
       - name: Bump version (without tagging)
         id: get_tag
-        uses: geoadmin/github-tag-action@feat-BGDIINF_SB-2357-fix-semver-with-v
+        uses: geoadmin/github-tag-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
