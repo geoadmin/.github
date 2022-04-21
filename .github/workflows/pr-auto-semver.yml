@@ -88,7 +88,7 @@ jobs:
 
       - name: Bump version (without tagging)
         id: get_tag
-        uses: anothrNick/github-tag-action@1.33.0
+        uses: geoadmin/github-tag-action@feat-BGDIINF_SB-2357-fix-semver-with-v
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
