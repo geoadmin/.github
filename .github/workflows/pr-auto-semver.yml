@@ -27,15 +27,17 @@ jobs:
   pr-release-title:
     name: Set PR title
     runs-on: ubuntu-latest
-    if: ${{ github.base_ref == 'master' }}
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout master branch
+        uses: actions/checkout@v2
+        if: ${{ github.base_ref == 'master' }}
         with:
           fetch-depth: 0
-          ref: master
+          ref: ${{ github.base_ref }}
 
       # This step is needed in order for the geoadmin/github-tag-action@master action to work properly
       - name: Do the merge but don't push it
+        if: ${{ github.base_ref == 'master' }}
         run: |
           cd ${GITHUB_WORKSPACE}
           git config user.email "github@swisstopo.ch"
@@ -55,13 +57,8 @@ jobs:
 
           # Set default bump type for hotfixes
           case "${{ github.head_ref }}" in
-            hotfix-* | bugfix-* | bug-*)
+            fix-* | hotfix-* | bugfix-* | bug-*)
               bump_type=patch
-              echo "Hotfix detected set default bump to ${bump_type}"
-              ;;
-
-            feat-* | feature-*)
-              bump_type=minor
               echo "Hotfix detected set default bump to ${bump_type}"
               ;;
           esac
@@ -87,6 +84,7 @@ jobs:
           echo "::set-output name=pr_title::${pr_title}"
 
       - name: Bump version (without tagging)
+        if: ${{ github.base_ref == 'master' }}
         id: get_tag
         uses: geoadmin/github-tag-action@master
         env:
@@ -98,15 +96,15 @@ jobs:
           DRY_RUN: true
 
       - name: Set `New Release` PR title if needed
-        if: ${{ github.head_ref == 'develop' }}
+        if: ${{ github.head_ref == 'develop' && github.base_ref == 'master' }}
         uses: juztcode/pr-updater@1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: "New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.bump_type.outputs.bump }}"
           body: ${{ steps.pr_infos.outputs.body }}
 
-      - name: Set `Hotfix` PR title if needed
-        if: ${{ github.head_ref != 'develop' }}
+      - name: Set Bump type in PR title if needed
+        if: ${{ github.head_ref != 'master' && github.base_ref == 'develop' }}
         uses: juztcode/pr-updater@1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
