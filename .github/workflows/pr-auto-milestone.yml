@@ -39,6 +39,27 @@ jobs:
           configuration-path: .github/pr-2-milestone-config.yml@master
           configuration-repo: geoadmin/.github
 
+  check-open-pr:
+    needs: add-milestone
+    name: Check open PRs
+    runs-on: ubuntu-latest
+    if: ${{ github.base_ref == 'master' && startsWith(github.head_ref, 'develop-') }}
+    steps:
+      - name: Check if there is any open PR(s) on HEAD branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        shell: bash
+        run: |
+          api_call="https://api.github.com/repos/${{ github.repository }}/pulls?state=open&base=${{ github.head_ref }}"
+          echo "::notice::api call ${api_call}"
+          counter=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${api_call}" | jq '. | length')
+          if [[ ${counter:-0} > 0 ]]; then
+            echo "::error::${counter} open PR(s) on branch ${{ github.head_ref }}"
+            exit 1
+          else
+            echo "::notice::No open PRs on branch ${{ github.head_ref }}"
+          fi
+ 
   set-title:
     needs: add-milestone
     name: Set PR title
