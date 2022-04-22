@@ -39,30 +39,25 @@ jobs:
           configuration-path: .github/pr-2-milestone-config.yml@master
           configuration-repo: geoadmin/.github
 
-  check-milestone-branch:
+  check-open-pr:
     needs: add-milestone
-    name: Check milestone branch on open PRs
+    name: Check open PRs
     runs-on: ubuntu-latest
     if: ${{ github.base_ref == 'master' && startsWith(github.head_ref, 'develop-') }}
     steps:
-      - name: Count and check open PRs on milestone branch
+      - name: Check if there is any open PR(s) on HEAD branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
-          github_repo: ${{ github.repository }}
-          github_head_ref: ${{ github.head_ref }}
-          github_base_ref: ${{ github.base_ref }}
         shell: bash
         run: |
-          echo "::notice::github head ref: ${github_head_ref}"
-          echo "::notice::github base ref: ${github_base_ref}"
-          api_call="https://api.github.com/repos/${github_repo}/pulls?state=open&base=${github_head_ref}"
+          api_call="https://api.github.com/repos/${{ github.repository }}/pulls?state=open&base=${{ github.head_ref }}"
           echo "::notice::api call ${api_call}"
           counter=$(curl -s -H "Accept: application/vnd.github.v3+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${api_call}" | jq '. | length')
           if [[ ${counter:-0} > 0 ]]; then
-            echo "::error::There are ${counter} open PRs on branch ${github_head_ref}"
+            echo "::error::${counter} open PR(s) on branch ${{ github.head_ref }}"
             exit 1
           else
-            echo "::notice::No open PRs on branch ${github_head_ref}"
+            echo "::notice::No open PRs on branch ${{ github.head_ref }}"
           fi
  
   set-title:
