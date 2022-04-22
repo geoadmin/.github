@@ -39,13 +39,13 @@ jobs:
           configuration-path: .github/pr-2-milestone-config.yml@master
           configuration-repo: geoadmin/.github
 
-  check-milestone:
+  check-milestone-branch:
     needs: add-milestone
-    name: Check if there are open PRs
+    name: Check milestone branch on open PRs
     runs-on: ubuntu-latest
     if: ${{ github.base_ref == 'master' && startsWith(github.head_ref, 'develop-') }}
     steps:
-      - name: Get number of PRs
+      - name: Count and check open PRs on milestone branch
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
           github_repo: ${{ github.repository }}
