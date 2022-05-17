@@ -47,7 +47,7 @@ jobs:
         id: pr_infos
         uses: Brymastr/pr-info-action@v1
 
-      - name: Get Bump Type and PR Title
+      - name: Get Default Bump Type from PR and get PR Title
         id: bump_type
         run: |
           bump_type=minor
@@ -66,7 +66,7 @@ jobs:
               ;;
           esac
 
-          echo "Set bump type based on PR infos"
+          echo "Set default bump type based on PR infos"
           case "${{ steps.pr_infos.outputs.body }}" in
             *#major*) bump_type=major ;;
             *#minor*) bump_type=minor ;;
@@ -78,7 +78,7 @@ jobs:
             *#minor*) bump_type=minor ;;
             *#patch*) bump_type=patch ;;
           esac
-          echo "::set-output name=bump::${bump_type}"
+          echo "::set-output name=default_bump::${bump_type}"
           echo "Bump type set to ${bump_type}"
 
           echo "Remove bump type from original title"
@@ -92,7 +92,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
-          DEFAULT_BUMP: ${{ steps.bump_type.outputs.bump }}
+          DEFAULT_BUMP: ${{ steps.bump_type.outputs.default_bump }}
           RELEASE_BRANCHES: master
           TAG_CONTEXT: repo
           DRY_RUN: true
@@ -102,7 +102,7 @@ jobs:
         uses: juztcode/pr-updater@1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.bump_type.outputs.bump }}"
+          title: "New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}"
           body: ${{ steps.pr_infos.outputs.body }}
 
       - name: Set `Hotfix` PR title if needed
@@ -110,7 +110,7 @@ jobs:
         uses: juztcode/pr-updater@1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          title: "${{ steps.bump_type.outputs.pr_title }} - #${{ steps.bump_type.outputs.bump }}"
+          title: "${{ steps.bump_type.outputs.pr_title }} - #${{ steps.get_tag.outputs.part }}"
           body: ${{ steps.pr_infos.outputs.body }}
 
   pr-labeler:
