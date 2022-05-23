@@ -47,7 +47,7 @@ jobs:
     steps:
       - name: Check if there is any open PR(s) on HEAD branch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           api_call="https://api.github.com/repos/${{ github.repository }}/pulls?state=open&base=${{ github.head_ref }}"
@@ -59,7 +59,7 @@ jobs:
           else
             echo "::notice::No open PRs on branch ${{ github.head_ref }}"
           fi
- 
+
   set-title:
     needs: add-milestone
     name: Set PR title
@@ -85,7 +85,7 @@ jobs:
           dry_run: true
 
       - name: Set `New Release` PR title if needed
-        if: ${{ steps.get_tag.outputs.new_tag != '' && startsWith(github.head_ref, 'develop-') }}
+        if: ${{ steps.get_tag.outputs.new_tag != '' && startsWith(github.head_ref, 'develop-20') }}
         uses: juztcode/pr-updater@1.0.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
