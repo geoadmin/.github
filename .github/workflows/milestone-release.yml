@@ -24,7 +24,7 @@ name: Milestone Release Reusable Workflow
 on:
   workflow_call:
     secrets:
-      MY_SECRET:
+      REPO_ACCESS_TOKEN:
         required: true
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Delete Milestone Branch Protection
       env:
-        GITHUB_TOKEN: ${{ secrets.MY_SECRET }}
+        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
         HUB_VERBOSE: 0
       run: |
         set +e
@@ -60,7 +60,7 @@ jobs:
         fi
     - name: Delete Milestone Branch
       env:
-        GITHUB_TOKEN: ${{ secrets.MY_SECRET }}
+        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
         HUB_VERBOSE: 0
       run: |
         set +e
@@ -94,7 +94,7 @@ jobs:
     steps:
     - name: Set default branch back to master or to next milestone branch
       env:
-        GITHUB_TOKEN: ${{ secrets.MY_SECRET }}
+        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
       run: |
         next_milestone_branch=$(gh api \
             -H "Accept: application/vnd.github+json" \
