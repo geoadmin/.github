@@ -1,7 +1,8 @@
 name: Create Milestone from branch name Reusable Workflow
 
 # If the branch name match the milestone branch pattern develop-YYYY-MM-DD, then the milestone
-# name YYYY-MM-DD is created if it not already exists.
+# name YYYY-MM-DD is created if it not already exists. It also create a milestone branch protection
+# and set the default branch to the milestone branch.
 #
 # Usage example
 #--------------
@@ -11,14 +12,28 @@ name: Create Milestone from branch name Reusable Workflow
 #jobs:
 #  create-milestone:
 #    uses: geoadmin/.github/.github/workflows/create-milestone.yml@master
+#    secrets: inherit
+#    with:
+#      ci_status_check_name: 'AWS CodeBuild eu-central-1 (rCODEBUILD_PROJECT_NAME)'
 
 on:
   workflow_call:
+    inputs:
+      ci_status_check_name:
+        default: ''
+        type: string
+        description: 'CI status check name that must pass for merging. Set to empty string to disable check.'
+    secrets:
+      MY_SECRET:
+        required: true
 
 jobs:
-  create-milestone:
-    name: Create Milestone
+  get-milestone:
+    name: Check if it's a milestone branch
     runs-on: ubuntu-latest
+    outputs:
+      milestone: ${{ steps.get-milestone.outputs.milestone }}
+      branch: ${{ steps.get-milestone.outputs.branch }}
     steps:
       - name: Get Milestone from branch name
         id: get-milestone
@@ -31,15 +46,69 @@ jobs:
               echo "::notice::${GITHUB_REF} is a milestone branch"
               milestone=${GITHUB_REF#refs/heads/${branch_prefix}}
               echo "::set-output name=milestone::${milestone}"
+              echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
               echo "::notice::Milestone is ${milestone}"
             fi
 
+  create-milestone-branch-protection:
+    name: Create Milestone Branch Protection
+    needs: get-milestone
+    if: "${{ needs.get-milestone.outputs.milestone }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Milestone Branch Protection
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_SECRET }}
+          HUB_VERBOSE: 0
+        run: |
+          required_status_checks=null
+          if [[ -n "${{ inputs.ci_status_check_name }}" ]];
+          then
+            required_status_checks=$(cat <<-END
+              {
+                "strict": true,
+                "contexts": [
+                  "${{ inputs.ci_status_check_name }}"
+                ]
+              }
+          END)
+          fi
+
+          hub api -i -X PUT /repos/${{ github.repository }}/branches/${{ needs.get-milestone.outputs.branch }}/protection \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            --input "-" <<STDIN
+          {
+            "required_status_checks": ${required_status_checks},
+            "enforce_admins": false,
+            "restrictions": null,
+            "required_pull_request_reviews": {"required_approving_review_count": 1}
+          }
+          STDIN
+
+  set-default-branch:
+    name: Set default branch to milestone branch
+    needs: get-milestone
+    if: "${{ needs.get-milestone.outputs.milestone }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set default branch to milestone
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_SECRET }}
+        run: |
+          gh repo edit ${{ github.repository }} --default-branch ${{ needs.get-milestone.outputs.branch }}
+
+  create-milestone:
+    name: Create Milestone
+    needs: get-milestone
+    if: "${{ needs.get-milestone.outputs.milestone }}"
+    runs-on: ubuntu-latest
+    steps:
       - name: Create Milestone if it not exists
-        if: ${{ steps.get-milestone.outputs.milestone }}
         uses: "julb/action-manage-milestone@v1"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          title: ${{ steps.get-milestone.outputs.milestone }}
+          title: "${{ needs.get-milestone.outputs.milestone }}"
           state: open
-          due_on: ${{ steps.get-milestone.outputs.milestone}}
+          due_on: "${{ needs.get-milestone.outputs.milestone }}"
+
