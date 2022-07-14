@@ -5,6 +5,8 @@ name: Milestone Release Reusable Workflow
 # tag is then <MILESTONE>-rc<X> where X is a milestone build number starting from 1.
 # The github release is then generated with release notes. The release notes are
 # generated from the PR titles.
+# Also remove milestone branch protection, delete the milestone branch and set the
+# default branch back to master.
 
 # Usage example
 # on:
@@ -17,11 +19,98 @@ name: Milestone Release Reusable Workflow
 # jobs:
 #   release:
 #     uses: geoadmin/.github/.github/workflows/milestone-release.yml@master
+#     secrets: inherit
 
 on:
   workflow_call:
+    secrets:
+      REPO_ACCESS_TOKEN:
+        required: true
 
 jobs:
+  delete-milestone-branch:
+    name: Delete Milestone Branch Protection
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.head_ref, 'develop-') }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Delete Milestone Branch Protection
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+        HUB_VERBOSE: 0
+      run: |
+        set +e
+        if response=$(hub api -X DELETE /repos/${{ github.repository }}/branches/${{ github.head_ref }}/protection);
+        then
+          set -e
+          # 200 OK
+          echo "::notice::Milestone Branch Protection \"${{ github.head_ref }}\" deleted"
+        else
+          set -e
+          # NOT 200 OK
+          message=$(echo "${response}" | jq --raw-output '.message')
+          echo "response=${response}"
+          echo "message=${message}"
+          if [[ "${message}" == "Branch not protected" ]] || [[ "${message}" == "Branch not found" ]]; then
+            echo "::notice::Milestone Branch Protection \"${{ github.head_ref }}\" already deleted"
+          else
+            echo "::error::Failed to delete branch protection \"${{ github.head_ref }}\": ${message}"
+            exit 1
+          fi
+        fi
+    - name: Delete Milestone Branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+        HUB_VERBOSE: 0
+      run: |
+        set +e
+        if response=$(hub api -X DELETE /repos/${{ github.repository }}/git/refs/heads/${{ github.head_ref }});
+        then
+          set -e
+          # 200 OK
+          echo "::notice::Milestone Branch \"${{ github.head_ref }}\" deleted"
+        else
+          set -e
+          # NOT 200 OK
+          message=$(echo "${response}" | jq --raw-output '.message')
+          echo "response=${response}"
+          echo "message=${message}"
+          if [[ "${message}" == "Reference does not exist" ]]; then
+            echo "::notice::Milestone Branch \"${{ github.head_ref }}\" already deleted"
+          else
+            echo "::error::Failed to delete milestone branch \"${{ github.head_ref }}\": ${message}"
+            exit 1
+          fi
+        fi
+
+
+  set-default-branch:
+    # We need to first delete the milestone branch, otherwise it will popup in the next milestone
+    # branch list below
+    needs: delete-milestone-branch
+    name: Set default branch back to master or to next milestone branch
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.head_ref, 'develop-') }}
+    steps:
+    - name: Set default branch back to master or to next milestone branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+      run: |
+        next_milestone_branch=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/branches | \
+            jq '. | map(select(.name | test("develop-\\d{4}-\\d{2}-\\d{2}"))) | sort_by(.name) | .[0].name ' -r)
+        echo "next_milestone_branch=${next_milestone_branch}"
+        if [[ "${next_milestone_branch}" == "null" ]];
+        then
+          echo "::notice::Set default branch to \"master\""
+          gh repo edit ${{ github.repository }} --default-branch master
+        else
+          echo "::notice::Set default branch to \"${next_milestone_branch}\""
+          gh repo edit ${{ github.repository }} --default-branch "${next_milestone_branch}"
+        fi
+
+
   milestone-release:
     name: Release Milestone
     runs-on: ubuntu-latest
@@ -73,7 +162,8 @@ jobs:
       if: ${{ startsWith(github.head_ref, 'develop-') }}
       uses: "julb/action-manage-milestone@v1"
       env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         title: ${{ steps.get-milestone.outputs.milestone }}
         state: closed
+
