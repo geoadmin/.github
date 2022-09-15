@@ -33,12 +33,15 @@ jobs:
       milestone: ${{ steps.action_milestone.outputs.milestone }}
     steps:
       - id: action_milestone
-        uses: iyu/actions-milestone@v1.2.0
+        uses: iyu/actions-milestone@v1.3.0
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: .github/pr-2-milestone-config.yml@master
           configuration-repo: geoadmin/.github
           silent: false
+          # Force the milestone overwrite and clear it if no match based on branch name is found
+          force: true
+          clear: true
 
   check-open-pr:
     name: Check open PRs
