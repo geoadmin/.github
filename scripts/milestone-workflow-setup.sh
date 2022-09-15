@@ -37,7 +37,9 @@ case "$answer" in
 esac
 
 read -r -d '' MSG << EOM
-Added new Milestone Workflows
+Setup requirements for milestone branch protection and auto deletion
+
+See https://github.com/geoadmin/.github/pull/24
 EOM
 
 for repo in "${repository[@]}"
@@ -50,6 +52,17 @@ do
     cp ~/repositories/geoadmin.github/workflow-templates/milestone-version.yml .github/workflows/ || exit
     cp ~/repositories/geoadmin.github/workflow-templates/pr-auto-milestone.yml .github/workflows/ || exit
     cp ~/repositories/geoadmin.github/workflow-templates/create-milestone.yml .github/workflows/ || exit
+    if [[ "${repo}" == "service-sphinxsearch" ]]; then
+        sed -i "s/AWS CodeBuild eu-central-1 (CODEBUILD_PROJECT_NAME)//" .github/workflows/create-milestone.yml
+    else
+        CODEBUILD_PROJECT_NAME=${repo}
+        if [[ "${repo}" == "mf-chsdi3" ]]; then
+            CODEBUILD_PROJECT_NAME=${repo}-python3
+        elif [[ "${repo}" == "wms-bgdi" ]]; then
+            CODEBUILD_PROJECT_NAME=service-${repo}
+        fi
+        sed -i "s/CODEBUILD_PROJECT_NAME/${CODEBUILD_PROJECT_NAME}/" .github/workflows/create-milestone.yml
+    fi
     git add --all .github/workflows/ || exit
     git commit -m "$MSG" || exit
     git push -f origin HEAD || exit
