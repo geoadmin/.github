@@ -56,9 +56,7 @@ do
         sed -i "s/AWS CodeBuild eu-central-1 (CODEBUILD_PROJECT_NAME)//" .github/workflows/create-milestone.yml
     else
         CODEBUILD_PROJECT_NAME=${repo}
-        if [[ "${repo}" == "mf-chsdi3" ]]; then
-            CODEBUILD_PROJECT_NAME=${repo}-python3
-        elif [[ "${repo}" == "wms-bgdi" ]]; then
+        if [[ "${repo}" == "wms-bgdi" ]]; then
             CODEBUILD_PROJECT_NAME=service-${repo}
         fi
         sed -i "s/CODEBUILD_PROJECT_NAME/${CODEBUILD_PROJECT_NAME}/" .github/workflows/create-milestone.yml
