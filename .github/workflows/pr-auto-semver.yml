@@ -83,7 +83,7 @@ jobs:
 
           echo "Remove bump type from original title"
           pr_title="${{ steps.pr_infos.outputs.title }}"
-          pr_title="${pr_title//[#]$bump_type/}"
+          pr_title=$(echo ${pr_title} | sed "s/[ ]*-*[ ]*#${bump_type}//")
           echo "::set-output name=pr_title::${pr_title}"
 
       - name: Bump version (without tagging)
