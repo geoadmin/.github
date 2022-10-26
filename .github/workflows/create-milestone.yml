@@ -64,9 +64,11 @@ jobs:
           required_status_checks=null
           if [[ -n "${{ inputs.ci_status_check_name }}" ]];
           then
+            # NOTE: we cannot set "strict" to true here otherwise we cannot update the milestone
+            # branch with the master hotfixes. (strict means "Require branches to be up to date before merging.")
             required_status_checks=$(cat <<-END
               {
-                "strict": true,
+                "strict": false,
                 "contexts": [
                   "${{ inputs.ci_status_check_name }}"
                 ]
