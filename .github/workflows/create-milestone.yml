@@ -100,7 +100,7 @@ jobs:
           next_milestone_branch=$(gh api \
             -H "Accept: application/vnd.github+json" \
             /repos/${{ github.repository }}/branches | \
-            jq '. | map(select(.name | test("develop-\\d{4}-\\d{2}-\\d{2}"))) | sort_by(.name) | .[0].name ' -r)
+            jq '. | map(select(.name | test("^develop-\\d{4}-\\d{2}-\\d{2}$"))) | sort_by(.name) | .[0].name ' -r)
           if [[ "${next_milestone_branch}" != "null" ]];
           then
             echo "::notice::Set default branch to \"${next_milestone_branch}\""
