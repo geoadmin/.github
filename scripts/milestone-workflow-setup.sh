@@ -3,7 +3,7 @@
 repository=(
     #"test-milestone-workflow"
     "service-wms-bod"
-    "wms-bgdi"
+    "service-wms"
     "wms-mapfile_include"
     "mf-chsdi3"
     "service-sphinxsearch"
@@ -56,9 +56,6 @@ do
         sed -i "s/AWS CodeBuild eu-central-1 (CODEBUILD_PROJECT_NAME)//" .github/workflows/create-milestone.yml
     else
         CODEBUILD_PROJECT_NAME=${repo}
-        if [[ "${repo}" == "wms-bgdi" ]]; then
-            CODEBUILD_PROJECT_NAME=service-${repo}
-        fi
         sed -i "s/CODEBUILD_PROJECT_NAME/${CODEBUILD_PROJECT_NAME}/" .github/workflows/create-milestone.yml
     fi
     git add --all .github/workflows/ || exit
