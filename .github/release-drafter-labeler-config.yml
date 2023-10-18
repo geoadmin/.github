@@ -1,27 +1,27 @@
 autolabeler:
   - label: 'new-release'
     branch:
-      - '/develop/'
-      - '/develop-.+/'
+      - '/^develop$/'
+      - '/^develop-/'
   - label: 'data-integration'
     branch:
-      - '/data[-_].+/'
+      - '/^data[-_]/'
   - label: 'bug'
     branch:
-      - '/bug[-_].+/'
-      - '/bugfix[-_].+/'
-      - '/fix[-_].+/'
+      - '/^bug[-_]/'
+      - '/^bugfix[-_]/'
+      - '/^fix[-_]/'
   - label: 'hotfix'
     branch:
-      - '/hotfix[-_].+'
-      - '/hot[-_].+'
+      - '/^hotfix[-_]/'
+      - '/^hot[-_]/'
   - label: 'feature'
     branch:
-      - '/feature[-_].+/'
-      - '/feat[-_].+/'
+      - '/^feature[-_]/'
+      - '/^feat[-_]/'
   - label: 'skip-release-note'
     branch:
       - '/update_README\.md/'
-      - '/norn[-_].+/'
-      - '/skiprn[-_].+/'
+      - '/\bnorn\b/'
+      - '/\bskip[-_]?rn\b/'
 template: '# Labeler'
