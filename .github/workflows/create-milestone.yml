@@ -56,6 +56,9 @@ jobs:
     if: "${{ needs.get-milestone.outputs.milestone }}"
     runs-on: ubuntu-latest
     steps:
+      - name: Install hub tool
+        run: |
+          sudo apt-get update && sudo apt-get install -y hub
       - name: Create Milestone Branch Protection
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
