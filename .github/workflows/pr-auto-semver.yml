@@ -103,7 +103,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: "New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}"
-          body: ${{ steps.pr_infos.outputs.body }}
+          body: "${{ steps.pr_infos.outputs.body }}"
 
       - name: Set `Hotfix` PR title if needed
         if: ${{ github.head_ref != 'develop' }}
@@ -111,7 +111,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: "${{ steps.bump_type.outputs.pr_title }} - #${{ steps.get_tag.outputs.part }}"
-          body: ${{ steps.pr_infos.outputs.body }}
+          body: "${{ steps.pr_infos.outputs.body }}"
 
   pr-labeler:
     name: Set PR label
