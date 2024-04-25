@@ -45,8 +45,10 @@ jobs:
             if [[ "${GITHUB_REF}" =~ $pattern ]]; then
               echo "::notice::${GITHUB_REF} is a milestone branch"
               milestone=${GITHUB_REF#refs/heads/${branch_prefix}}
-              echo "::set-output name=milestone::${milestone}"
-              echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
+              echo "milestone=${milestone}" >> $GITHUB_OUTPUT
+              echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
+
+
               echo "::notice::Milestone is ${milestone}"
             fi
 
@@ -121,11 +123,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create Milestone if it not exists
-        uses: "julb/action-manage-milestone@v1"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          title: "${{ needs.get-milestone.outputs.milestone }}"
-          state: open
-          due_on: "${{ needs.get-milestone.outputs.milestone }}"
-
+        run: |
+          gh api /repos/${{ github.repository }}/milestones \
+          -f "title=${{ needs.get-milestone.outputs.milestone }}" \
+          -f "state=open"
