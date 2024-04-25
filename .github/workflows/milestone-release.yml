@@ -36,7 +36,7 @@ jobs:
     - name: Install hub tool
       run: |
         sudo apt-get update && sudo apt-get install -y hub
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Delete Milestone Branch Protection
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
@@ -127,11 +127,11 @@ jobs:
         fi
 
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Bump Milestone Tag
       id: tagging
-      uses: geoadmin/action-milestone-tag@v1.3.0
+      uses: geoadmin/action-milestone-tag@v1.4.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         custom_tag: '${MILESTONE}-rc${TAG_NUMBER}'
@@ -139,7 +139,7 @@ jobs:
 
     # Drafts your next Release notes as Pull Requests are merged into "master"
     - name: Create Release with Release Notes
-      uses: release-drafter/release-drafter@v5
+      uses: release-drafter/release-drafter@v6
       if: ${{ github.base_ref == 'master' }}
       with:
         config-name: release-drafter-config.yml
@@ -159,14 +159,16 @@ jobs:
       run: |
         tag=${{ steps.tagging.outputs.new_tag }}
         milestone=${tag%%-rc*}
-        echo "::set-output name=milestone::${milestone}"
+        echo "milestone=${milestone}" >> $GITHUB_OUTPUT
         echo "::notice::Milestone is ${milestone}"
     - name: Close the milestone if needed
       if: ${{ startsWith(github.head_ref, 'develop-') }}
-      uses: "julb/action-manage-milestone@v1"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        title: ${{ steps.get-milestone.outputs.milestone }}
-        state: closed
-
+      run: |
+        milestone=$(gh api /repos/${{ github.repository }}/milestones | \
+          jq -c '.[] | select(.title=="${{ steps.get-milestone.outputs.milestone }}").number')
+        echo "::notice::Milestone found \"${milestone}\""
+        gh api /repos/${{ github.repository }}/milestones/${milestone} \
+          --method "PATCH" \
+          -f "state=closed"
