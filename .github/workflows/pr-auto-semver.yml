@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.base_ref == 'master' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: master
@@ -45,7 +45,7 @@ jobs:
 
       - name: Get PR Infos
         id: pr_infos
-        uses: Brymastr/pr-info-action@v1
+        uses: 8BitJonny/gh-get-current-pr@3.0.0
 
       - name: Get Default Bump Type from PR and get PR Title
         id: bump_type
@@ -67,24 +67,24 @@ jobs:
           esac
 
           echo "Set default bump type based on PR infos"
-          case "${{ steps.pr_infos.outputs.body }}" in
+          case "${{ steps.pr_infos.outputs.pr_body }}" in
             *#major*) bump_type=major ;;
             *#minor*) bump_type=minor ;;
             *#patch*) bump_type=patch ;;
           esac
 
-          case "${{ steps.pr_infos.outputs.title }}" in
+          case "${{ steps.pr_infos.outputs.pr_title }}" in
             *#major*) bump_type=major ;;
             *#minor*) bump_type=minor ;;
             *#patch*) bump_type=patch ;;
           esac
-          echo "::set-output name=default_bump::${bump_type}"
+          echo "default_bump=${bump_type}" >> $GITHUB_OUTPUT
           echo "Bump type set to ${bump_type}"
 
           echo "Remove bump type from original title"
-          pr_title="${{ steps.pr_infos.outputs.title }}"
+          pr_title="${{ steps.pr_infos.outputs.pr_title }}"
           pr_title=$(echo ${pr_title} | sed "s/[ ]*-*[ ]*#${bump_type}//")
-          echo "::set-output name=pr_title::${pr_title}"
+          echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
 
       - name: Bump version (without tagging)
         id: get_tag
@@ -99,26 +99,30 @@ jobs:
 
       - name: Set `New Release` PR title if needed
         if: ${{ github.head_ref == 'develop' }}
-        uses: juztcode/pr-updater@1.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}"
-          body: ${{ steps.pr_infos.outputs.body }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          gh api /repos/${{ github.repository }}/pulls/${PR_NUMBER} \
+            --method "PATCH" \
+            -f "title=New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}"
 
       - name: Set `Hotfix` PR title if needed
         if: ${{ github.head_ref != 'develop' }}
-        uses: juztcode/pr-updater@1.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "${{ steps.bump_type.outputs.pr_title }} - #${{ steps.get_tag.outputs.part }}"
-          body: ${{ steps.pr_infos.outputs.body }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          gh api /repos/${{ github.repository }}/pulls/${PR_NUMBER} \
+            --method "PATCH" \
+            -f "title=${{ steps.bump_type.outputs.pr_title }} - #${{ steps.get_tag.outputs.part }}"
 
   pr-labeler:
     name: Set PR label
     runs-on: ubuntu-latest
     steps:
       - name: PR Auto Labeler
-        uses: release-drafter/release-drafter@v5
+        uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-labeler-config.yml
           disable-autolabeler: false

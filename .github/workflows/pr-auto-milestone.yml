@@ -33,7 +33,7 @@ jobs:
       milestone: ${{ steps.action_milestone.outputs.milestone }}
     steps:
       - id: action_milestone
-        uses: iyu/actions-milestone@v1.3.0
+        uses: iyu/actions-milestone@v1
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: .github/pr-2-milestone-config.yml@master
@@ -69,17 +69,13 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.base_ref == 'master' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get PR Infos
-        id: pr_infos
-        uses: Brymastr/pr-info-action@v1
-
       - name: Bump version (without tagging)
         id: get_tag
-        uses: geoadmin/action-milestone-tag@v1.2.1
+        uses: geoadmin/action-milestone-tag@v1.4.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           custom_tag: '${MILESTONE}-rc${TAG_NUMBER}'
@@ -89,18 +85,20 @@ jobs:
 
       - name: Set `New Release` PR title if needed
         if: ${{ steps.get_tag.outputs.new_tag != '' && startsWith(github.head_ref, 'develop-20') }}
-        uses: juztcode/pr-updater@1.0.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "New Release ${{ steps.get_tag.outputs.new_tag }}"
-          body: ${{ steps.pr_infos.outputs.body }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          gh api /repos/${{ github.repository }}/pulls/${PR_NUMBER} \
+            --method "PATCH" \
+            -f "title=New Release ${{ steps.get_tag.outputs.new_tag }}"
 
   pr-labeler:
     name: Set PR label
     runs-on: ubuntu-latest
     steps:
       - name: PR Auto Labeler
-        uses: release-drafter/release-drafter@v5
+        uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter-labeler-config.yml
           disable-autolabeler: false
