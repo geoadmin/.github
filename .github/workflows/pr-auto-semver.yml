@@ -46,6 +46,8 @@ jobs:
       - name: Get PR Infos
         id: pr_infos
         uses: 8BitJonny/gh-get-current-pr@3.0.0
+        with:
+          sha: ${{ github.event.pull_request.head.sha }}
 
       - name: Get Default Bump Type from PR and get PR Title
         id: bump_type
@@ -55,7 +57,7 @@ jobs:
 
           # Set default bump type for hotfixes
           case "${{ github.head_ref }}" in
-            hotfix-* | bugfix-* | bug-*)
+            hotfix-* | bugfix-* | bug-* | dependabot/*)
               bump_type=patch
               echo "Hotfix detected set default bump to ${bump_type}"
               ;;
@@ -85,6 +87,7 @@ jobs:
           pr_title="${{ steps.pr_infos.outputs.pr_title }}"
           pr_title=$(echo ${pr_title} | sed "s/[ ]*-*[ ]*#${bump_type}//")
           echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
+          echo "Original title set to '${pr_title}'"
 
       - name: Bump version (without tagging)
         id: get_tag
