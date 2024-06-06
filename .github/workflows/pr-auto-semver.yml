@@ -26,35 +26,18 @@ on:
   workflow_call:
 
 jobs:
-  pr-release-title:
+  pr-title:
     name: Set PR title
     runs-on: ubuntu-latest
-    if: ${{ github.base_ref == 'master' }}
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
       PR_BODY: ${{ github.event.pull_request.body }}
     steps:
-
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: master
-
-      # This step is needed in order for the geoadmin/github-tag-action@master action to work properly
-      # Note also that we need to set the PR title and body as commit message in order to be able to
-      # overwrite any bump type by any previous commit
-      - name: Do the merge but don't push it
-        run: |
-          cd ${GITHUB_WORKSPACE}
-          git config user.email "github@swisstopo.ch"
-          git config user.name "Github PR Auto Title Workflow"
-          git fetch origin ${{ github.head_ref }}:${{ github.head_ref }}
-          git merge ${{ github.head_ref }} --no-ff -m "${PR_TITLE}\n\n${PR_BODY}"
-
-      - name: Get Default Bump Type from PR and get PR Title
+      - name: Get Default Bump Type from PR information
         id: bump_type
         run: |
           bump_type=minor
+          echo "Initial default bump type ${bump_type}"
 
           # Set default bump type for hotfixes
           case "${{ github.head_ref }}" in
@@ -84,7 +67,7 @@ jobs:
           esac
 
           echo "Remove bump type from original title"
-          pr_title="${{ github.event.pull_request.title }}"
+          pr_title="${PR_TITLE}"
           pr_title=$(echo ${pr_title} | sed "s/[ ]*-*[ ]*#${bump_type}//")
 
           echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
@@ -93,7 +76,26 @@ jobs:
           echo "default_bump=${bump_type}" >> $GITHUB_OUTPUT
           echo "Bump type set to ${bump_type}"
 
+      - uses: actions/checkout@v4
+        if: ${{ github.base_ref == 'master' }}
+        with:
+          fetch-depth: 0
+          ref: master
+
+      # This step is needed in order for the geoadmin/github-tag-action@master action to work properly
+      # Note also that we need to set the PR title and body as commit message in order to be able to
+      # overwrite any bump type by any previous commit
+      - name: Do the merge but don't push it
+        if: ${{ github.base_ref == 'master' }}
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          git config user.email "github@swisstopo.ch"
+          git config user.name "Github PR Auto Title Workflow"
+          git fetch origin ${{ github.head_ref }}:${{ github.head_ref }}
+          git merge ${{ github.head_ref }} --no-ff -m "${PR_TITLE}\n\n${PR_BODY}"
+
       - name: Bump version (without tagging)
+        if: ${{ github.base_ref == 'master' }}
         id: get_tag
         uses: geoadmin/github-tag-action@master
         env:
@@ -106,7 +108,7 @@ jobs:
           VERBOSE: true
 
       - name: Set `New Release` PR title if needed
-        if: ${{ github.head_ref == 'develop' }}
+        if: ${{ github.base_ref == 'master' && github.head_ref == 'develop' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
@@ -115,7 +117,7 @@ jobs:
             --method "PATCH" \
             -f "title=New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}"
 
-      - name: Set `Hotfix` PR title if needed
+      - name: Add default bump type based on PR information
         if: ${{ github.head_ref != 'develop' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -123,7 +125,7 @@ jobs:
         run: |
           gh api /repos/${{ github.repository }}/pulls/${PR_NUMBER} \
             --method "PATCH" \
-            -f "title=${{ steps.bump_type.outputs.pr_title }} - #${{ steps.get_tag.outputs.part }}"
+            -f "title=${{ steps.bump_type.outputs.pr_title }} - #${{ steps.bump_type.outputs.default_bump }}"
 
   pr-labeler:
     name: Set PR label
