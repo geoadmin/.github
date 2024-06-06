@@ -103,6 +103,7 @@ jobs:
           RELEASE_BRANCHES: master
           TAG_CONTEXT: repo
           DRY_RUN: true
+          VERBOSE: true
 
       - name: Set `New Release` PR title if needed
         if: ${{ github.head_ref == 'develop' }}
