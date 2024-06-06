@@ -70,8 +70,15 @@ jobs:
           pr_title="${PR_TITLE}"
           pr_title=$(echo ${pr_title} | sed "s/[ ]*-*[ ]*#${bump_type}//")
 
+          echo "Remove bump type from original body"
+          pr_body="${PR_BODY}"
+          pr_body=$(echo ${pr_body} | sed "s/[ ]*-*[ ]*#${bump_type}//")
+
           echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
           echo "Original title set to '${pr_title}'"
+
+          echo "pr_body=${pr_body}" >> $GITHUB_OUTPUT
+          echo "Original body set to '${pr_body}'"
 
           echo "default_bump=${bump_type}" >> $GITHUB_OUTPUT
           echo "Bump type set to ${bump_type}"
@@ -115,17 +122,30 @@ jobs:
         run: |
           gh api /repos/${{ github.repository }}/pulls/${PR_NUMBER} \
             --method "PATCH" \
-            -f "title=New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}"
+            -f "title=New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}" \
+            -f "body=${{ steps.bump_type.outputs.pr_body }}"
 
       - name: Add default bump type based on PR information
-        if: ${{ github.head_ref != 'develop' }}
+        if: ${{ github.head_ref != 'develop' && steps.bump_type.outputs.default_bump != 'minor' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
         run: |
           gh api /repos/${{ github.repository }}/pulls/${PR_NUMBER} \
             --method "PATCH" \
-            -f "title=${{ steps.bump_type.outputs.pr_title }} - #${{ steps.bump_type.outputs.default_bump }}"
+            -f "title=${{ steps.bump_type.outputs.pr_title }} - #${{ steps.bump_type.outputs.default_bump }}" \
+            -f "body=${{ steps.bump_type.outputs.pr_body }}"
+
+      - name: Removed default bump type \#minor from title
+        if: ${{ github.head_ref != 'develop' && steps.bump_type.outputs.default_bump == 'minor' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          gh api /repos/${{ github.repository }}/pulls/${PR_NUMBER} \
+            --method "PATCH" \
+            -f "title=${{ steps.bump_type.outputs.pr_title }}" \
+            -f "body=${{ steps.bump_type.outputs.pr_body }}"
 
   pr-labeler:
     name: Set PR label
