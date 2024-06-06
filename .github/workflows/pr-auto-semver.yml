@@ -53,23 +53,22 @@ jobs:
         id: bump_type
         run: |
           bump_type=minor
-          echo "Set Bump Type default to ${bump_type}"
-          echo "PR_TITLE=${PR_TITLE}"
 
           # Set default bump type for hotfixes
           case "${{ github.head_ref }}" in
             hotfix-* | bugfix-* | bug-* | dependabot/*)
               bump_type=patch
-              echo "Hotfix detected set default bump to ${bump_type}"
-              ;;
-
-            feat-* | feature-*)
-              bump_type=minor
-              echo "Hotfix detected set default bump to ${bump_type}"
+              echo "Hotfix branch detected set default bump to ${bump_type}"
               ;;
           esac
 
           echo "Set default bump type based on PR infos"
+          echo "PR_TITLE=${PR_TITLE}"
+          echo "PR_BODY"
+          echo "----------------"
+          echo ${PR_BODY}
+          echo "----------------"
+
           case "${PR_BODY}" in
             *#major*) bump_type=major ;;
             *#minor*) bump_type=minor ;;
@@ -81,14 +80,16 @@ jobs:
             *#minor*) bump_type=minor ;;
             *#patch*) bump_type=patch ;;
           esac
-          echo "default_bump=${bump_type}" >> $GITHUB_OUTPUT
-          echo "Bump type set to ${bump_type}"
 
           echo "Remove bump type from original title"
           pr_title="${{ github.event.pull_request.title }}"
           pr_title=$(echo ${pr_title} | sed "s/[ ]*-*[ ]*#${bump_type}//")
+
           echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
           echo "Original title set to '${pr_title}'"
+
+          echo "default_bump=${bump_type}" >> $GITHUB_OUTPUT
+          echo "Bump type set to ${bump_type}"
 
       - name: Bump version (without tagging)
         id: get_tag
