@@ -41,13 +41,15 @@ jobs:
           ref: master
 
       # This step is needed in order for the geoadmin/github-tag-action@master action to work properly
+      # Note also that we need to set the PR title and body as commit message in order to be able to
+      # overwrite any bump type by any previous commit
       - name: Do the merge but don't push it
         run: |
           cd ${GITHUB_WORKSPACE}
           git config user.email "github@swisstopo.ch"
           git config user.name "Github PR Auto Title Workflow"
           git fetch origin ${{ github.head_ref }}:${{ github.head_ref }}
-          git merge ${{ github.head_ref }} --no-ff
+          git merge ${{ github.head_ref }} --no-ff -m "${PR_TITLE}\n\n${PR_BODY}"
 
       - name: Get Default Bump Type from PR and get PR Title
         id: bump_type
