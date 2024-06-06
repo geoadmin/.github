@@ -41,6 +41,7 @@ jobs:
         DEFAULT_BUMP: minor
         RELEASE_BRANCHES: master
         TAG_CONTEXT: repo
+        VERBOSE: true
 
     - name: Set `New Release` PR title if needed
       if: ${{ github.base_ref == 'refs/heads/master' }}

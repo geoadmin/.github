@@ -4,12 +4,14 @@ name: PR Auto Label and SemVer Release Title Reusable Workflow
 #
 # For new release (develop -> master PR) the title is set to `New Release <next-version> - <bump-type>`
 # with bump-type taken from the original title or from the change log commit message.
-# By default bump-type if not specified or found is set to minor.
+# By default bump-type if not specified or found is set to minor or patch if it is a hot fix PR.
 #
 # For hotfix (hotfix-* -> master PR) the title is set to `<next-version> - <original-title> - <bump-type>`
 #
 # Finally add a Label to the PR based on HEAD branch name. These labels are then used to categorize
 # the release notes.
+
+# NOTE: this workflow only works for github pull_request trigger
 
 # Usage example:
 # on:
@@ -28,66 +30,68 @@ jobs:
     name: Set PR title
     runs-on: ubuntu-latest
     if: ${{ github.base_ref == 'master' }}
+    env:
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_BODY: ${{ github.event.pull_request.body }}
     steps:
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: master
 
       # This step is needed in order for the geoadmin/github-tag-action@master action to work properly
+      # Note also that we need to set the PR title and body as commit message in order to be able to
+      # overwrite any bump type by any previous commit
       - name: Do the merge but don't push it
         run: |
           cd ${GITHUB_WORKSPACE}
           git config user.email "github@swisstopo.ch"
           git config user.name "Github PR Auto Title Workflow"
           git fetch origin ${{ github.head_ref }}:${{ github.head_ref }}
-          git merge ${{ github.head_ref }} --no-ff
-
-      - name: Get PR Infos
-        id: pr_infos
-        uses: 8BitJonny/gh-get-current-pr@3.0.0
-        with:
-          sha: ${{ github.event.pull_request.head.sha }}
+          git merge ${{ github.head_ref }} --no-ff -m "${PR_TITLE}\n\n${PR_BODY}"
 
       - name: Get Default Bump Type from PR and get PR Title
         id: bump_type
         run: |
           bump_type=minor
-          echo "Set Bump Type default to ${bump_type}"
 
           # Set default bump type for hotfixes
           case "${{ github.head_ref }}" in
             hotfix-* | bugfix-* | bug-* | dependabot/*)
               bump_type=patch
-              echo "Hotfix detected set default bump to ${bump_type}"
-              ;;
-
-            feat-* | feature-*)
-              bump_type=minor
-              echo "Hotfix detected set default bump to ${bump_type}"
+              echo "Hotfix branch detected set default bump to ${bump_type}"
               ;;
           esac
 
           echo "Set default bump type based on PR infos"
-          case "${{ steps.pr_infos.outputs.pr_body }}" in
+          echo "PR_TITLE=${PR_TITLE}"
+          echo "PR_BODY"
+          echo "----------------"
+          echo ${PR_BODY}
+          echo "----------------"
+
+          case "${PR_BODY}" in
             *#major*) bump_type=major ;;
             *#minor*) bump_type=minor ;;
             *#patch*) bump_type=patch ;;
           esac
 
-          case "${{ steps.pr_infos.outputs.pr_title }}" in
+          case "${PR_TITLE}" in
             *#major*) bump_type=major ;;
             *#minor*) bump_type=minor ;;
             *#patch*) bump_type=patch ;;
           esac
-          echo "default_bump=${bump_type}" >> $GITHUB_OUTPUT
-          echo "Bump type set to ${bump_type}"
 
           echo "Remove bump type from original title"
-          pr_title="${{ steps.pr_infos.outputs.pr_title }}"
+          pr_title="${{ github.event.pull_request.title }}"
           pr_title=$(echo ${pr_title} | sed "s/[ ]*-*[ ]*#${bump_type}//")
+
           echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
           echo "Original title set to '${pr_title}'"
+
+          echo "default_bump=${bump_type}" >> $GITHUB_OUTPUT
+          echo "Bump type set to ${bump_type}"
 
       - name: Bump version (without tagging)
         id: get_tag
@@ -99,6 +103,7 @@ jobs:
           RELEASE_BRANCHES: master
           TAG_CONTEXT: repo
           DRY_RUN: true
+          VERBOSE: true
 
       - name: Set `New Release` PR title if needed
         if: ${{ github.head_ref == 'develop' }}
