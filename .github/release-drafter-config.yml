@@ -27,6 +27,8 @@ replacers:
   # Clear the release bump type from the PR titles
   - search: '/(\s*-\s*)?#\b(patch|minor|major)\b/g'
     replace: ''
+  - search: '/patch/g'
+    replace: ''
 change-template: '- #$NUMBER - $TITLE'
 change-title-escapes: '\<*&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 template: |
