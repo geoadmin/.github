@@ -23,13 +23,6 @@ exclude-labels:
   - 'no-rn'
   - 'no-changelog'
   - 'new-release'
-replacers:
-  - search: /(BGDIINF_SB-\d+)\s*[:\-/;\\]*\s*/g
-    replace: '[$1](https://jira.swisstopo.ch/browse/$1) - '
-  - search: /(IGI_SB-\d+)\s*[:\-/;\\]*\s*/g
-    replace: '[$1](https://jira.swisstopo.ch/browse/$1) - '
-  - search: /(BGDIDIC-\d+)\s*[:\-/;\\]*\s*/g
-    replace: '[$1](https://jira.swisstopo.ch/browse/$1) - '
 change-template: '- #$NUMBER - $TITLE'
 change-title-escapes: '\<*&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 template: |
