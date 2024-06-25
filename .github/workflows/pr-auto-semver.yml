@@ -58,7 +58,7 @@ jobs:
 
           # Set default bump type for hotfixes
           case "${{ github.head_ref }}" in
-            hotfix-* | bugfix-* | bug-* | dependabot/*)
+            hotfix* | bugfix* | bug* | fix* | dependabot/*)
               bump_type=patch
               echo "Hotfix branch detected set default bump to ${bump_type}"
               ;;
