@@ -45,7 +45,7 @@ jobs:
       # overwrite any bump type by any previous commit
       - name: Do the merge but don't push it
         run: |
-          cd ${GITHUB_WORKSPACE}
+          cd "${GITHUB_WORKSPACE}"
           git config user.email "github@swisstopo.ch"
           git config user.name "Github PR Auto Title Workflow"
           git fetch origin ${{ github.head_ref }}:${{ github.head_ref }}
@@ -68,7 +68,7 @@ jobs:
           echo "PR_TITLE=${PR_TITLE}"
           echo "PR_BODY"
           echo "----------------"
-          echo ${PR_BODY}
+          echo "${PR_BODY}"
           echo "----------------"
 
           case "${PR_BODY}" in
@@ -84,8 +84,8 @@ jobs:
           esac
 
           echo "Remove bump type from original title"
-          pr_title="${{ github.event.pull_request.title }}"
-          pr_title=$(echo ${pr_title} | sed "s/[ ]*-*[ ]*#${bump_type}//")
+          pr_title="${PR_TITLE}"
+          pr_title=$(echo "${pr_title}" | sed "s/[ ]*-*[ ]*#${bump_type}//")
 
           echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
           echo "Original title set to '${pr_title}'"
@@ -111,7 +111,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
         run: |
-          gh api /repos/${{ github.repository }}/pulls/${PR_NUMBER} \
+          gh api "§/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
             --method "PATCH" \
             -f "title=New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}"
 
@@ -121,7 +121,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
         run: |
-          gh api /repos/${{ github.repository }}/pulls/${PR_NUMBER} \
+          gh api "/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
             --method "PATCH" \
             -f "title=${{ steps.bump_type.outputs.pr_title }} - #${{ steps.get_tag.outputs.part }}"
 

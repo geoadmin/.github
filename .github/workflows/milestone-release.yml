@@ -158,7 +158,7 @@ jobs:
       shell: bash
       run: |
         tag=${{ steps.tagging.outputs.new_tag }}
-        milestone=${tag%%-rc*}
+        milestone="${tag%%-rc*}"
         echo "milestone=${milestone}" >> $GITHUB_OUTPUT
         echo "::notice::Milestone is ${milestone}"
     - name: Close the milestone if needed
@@ -169,6 +169,6 @@ jobs:
         milestone=$(gh api /repos/${{ github.repository }}/milestones | \
           jq -c '.[] | select(.title=="${{ steps.get-milestone.outputs.milestone }}").number')
         echo "::notice::Milestone found \"${milestone}\""
-        gh api /repos/${{ github.repository }}/milestones/${milestone} \
+        gh api "/repos/${{ github.repository }}/milestones/${milestone}" \
           --method "PATCH" \
           -f "state=closed"
