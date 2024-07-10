@@ -111,7 +111,7 @@ jobs:
           if [[ "${next_milestone_branch}" != "null" ]];
           then
             echo "::notice::Set default branch to \"${next_milestone_branch}\""
-            gh repo edit ${{ github.repository }} --default-branch ${next_milestone_branch}
+            gh repo edit ${{ github.repository }} --default-branch "${next_milestone_branch}"
           else
             echo "::warning::No milestone branch found !"
           fi

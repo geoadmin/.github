@@ -85,7 +85,9 @@ jobs:
 
           echo "Remove bump type from original title"
           pr_title="${PR_TITLE}"
-          pr_title=$(echo "${pr_title}" | sed "s/[ ]*-*[ ]*#${bump_type}//")
+          # We use sed at the end to properly escape the single quotes characters
+          # to avoid any issues later one when using the title in bash command if the title contains quotes
+          pr_title=$(echo "${pr_title}" | sed "s/[ ]*-*[ ]*#${bump_type}//" | sed "s/'/'\\\\''/g")
 
           echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
           echo "Original title set to '${pr_title}'"
@@ -111,9 +113,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.number }}
         run: |
-          gh api "§/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
+          gh api "/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
             --method "PATCH" \
-            -f "title=New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}"
+            -f 'title=New Release ${{ steps.get_tag.outputs.new_tag }} - #${{ steps.get_tag.outputs.part }}'
 
       - name: Set `Hotfix` PR title if needed
         if: ${{ github.head_ref != 'develop' }}
@@ -123,7 +125,7 @@ jobs:
         run: |
           gh api "/repos/${{ github.repository }}/pulls/${PR_NUMBER}" \
             --method "PATCH" \
-            -f "title=${{ steps.bump_type.outputs.pr_title }} - #${{ steps.get_tag.outputs.part }}"
+            -f 'title=${{ steps.bump_type.outputs.pr_title }} - #${{ steps.get_tag.outputs.part }}'
 
   pr-labeler:
     name: Set PR label
