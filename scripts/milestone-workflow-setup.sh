@@ -4,7 +4,7 @@ repository=(
     #"test-milestone-workflow"
     "service-wms-bod"
     "service-wms"
-    "wms-mapfile_include"
+    "config-wms-mapfiles"
     "mf-chsdi3"
     "service-sphinxsearch"
 )
