@@ -4,9 +4,9 @@ This repository contains the Geoadmin workflows templates and reusable workflows
 
 ## Reusable workflows
 
-Reusable workflow are in the [.github/workflows](.github/workflows/), they are managed by IGEB-B.
+Reusable workflow are in the [.github/workflows](.github/workflows/), they are managed by PP-BGDI.
 
-:warning: ***WARNING: Changing reusable workflows affect all production IGEB-B repositories :exclamation:*** :warning:
+:warning: ***WARNING: Changing reusable workflows affect all production PP-BGDI repositories :exclamation:*** :warning:
 
 For more information on Reusable Workflow see [Reusing workflows](https://docs.github.com/en/actions/learn-github-actions/reusing-workflows).
 
