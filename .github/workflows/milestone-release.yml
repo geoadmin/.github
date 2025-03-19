@@ -15,6 +15,7 @@ name: Milestone Release Reusable Workflow
 #       - closed
 #     branches:
 #       - master
+#       - develop-*
 
 # jobs:
 #   release:
@@ -129,12 +130,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Bump Milestone Tag
-      id: tagging
+    - name: Bump Milestone Release Tag
+      id: tagging-release
+      if: ${{ github.base_ref == 'master' }}
       uses: geoadmin/action-milestone-tag@v1.5.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         custom_tag: '${MILESTONE}-rc${TAG_NUMBER}'
+        milestone_pattern: '\d{4}-\d{2}-\d{2}'
+
+    - name: Bump Milestone Beta Tag
+      id: tagging-beta
+      if: ${{ startsWith(github.base_ref, 'develop-') }}
+      uses: geoadmin/action-milestone-tag@v1.5.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_tag: '${MILESTONE}-beta${TAG_NUMBER}'
         milestone_pattern: '\d{4}-\d{2}-\d{2}'
 
     # Drafts your next Release notes as Pull Requests are merged into "master"
@@ -145,9 +156,9 @@ jobs:
         config-name: release-drafter-config.yml
         disable-autolabeler: true
         publish: true
-        tag: ${{ steps.tagging.outputs.new_tag }}
-        version: ${{ steps.tagging.outputs.new_tag }}
-        name: ${{ steps.tagging.outputs.new_tag }}
+        tag: ${{ steps.tagging-release.outputs.new_tag }}
+        version: ${{ steps.tagging-release.outputs.new_tag }}
+        name: ${{ steps.tagging-release.outputs.new_tag }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -157,10 +168,11 @@ jobs:
       id: get-milestone
       shell: bash
       run: |
-        tag=${{ steps.tagging.outputs.new_tag }}
+        tag=${{ steps.tagging-release.outputs.new_tag }}
         milestone="${tag%%-rc*}"
         echo "milestone=${milestone}" >> $GITHUB_OUTPUT
         echo "::notice::Milestone is ${milestone}"
+
     - name: Close the milestone if needed
       if: ${{ startsWith(github.head_ref, 'develop-') }}
       env:
