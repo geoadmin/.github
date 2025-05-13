@@ -3,6 +3,8 @@ name: Milestone Release Reusable Workflow
 # Tag and create a Release for milestone workflow. The repository is tagged
 # based on the milestone title which should be in the form YYYY-MM-DD. The
 # tag is then <MILESTONE>-rc<X> where X is a milestone build number starting from 1.
+# If the new release is a beta release, the tag is <MILESTONE>-beta<X> where X is a
+# milestone build number starting from 1 (this happends when merging into develop-YYYY-MM-DD branch).
 # The github release is then generated with release notes. The release notes are
 # generated from the PR titles.
 # Also remove milestone branch protection, delete the milestone branch and set the
@@ -34,17 +36,39 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ startsWith(github.head_ref, 'develop-') }}
     steps:
-    - name: Install hub tool
-      run: |
-        sudo apt-get update && sudo apt-get install -y hub
     - uses: actions/checkout@v4
+    # We need first to set the default branch to the next milestone branch or to master otherwise
+    # we cannot delete the current default branch (the milestone branch).
+    - name: Set default branch back to master or to next milestone branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
+      run: |
+        # Get the next milestone branch name, the jq command will return the second
+        # branch name in the list of branches matching the pattern develop-YYYY-MM-DD
+        # The first branch is the current branch, the second one is the next milestone
+        # branch. If there is no next milestone branch, then jq will return null.
+        next_milestone_branch=$( \
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/branches \
+          | jq '. | map(select(.name | test("develop-\\d{4}-\\d{2}-\\d{2}"))) | sort_by(.name) | .[1].name ' -r \
+        )
+        echo "next_milestone_branch=${next_milestone_branch}"
+        if [[ "${next_milestone_branch}" == "null" ]];
+        then
+          echo "::notice::Set default branch to \"master\""
+          gh repo edit ${{ github.repository }} --default-branch master
+        else
+          echo "::notice::Set default branch to \"${next_milestone_branch}\""
+          gh repo edit ${{ github.repository }} --default-branch "${next_milestone_branch}"
+        fi
     - name: Delete Milestone Branch Protection
       env:
         GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
         HUB_VERBOSE: 0
       run: |
         set +e
-        if response=$(hub api -X DELETE /repos/${{ github.repository }}/branches/${{ github.head_ref }}/protection);
+        if response=$(gh api -X DELETE /repos/${{ github.repository }}/branches/${{ github.head_ref }}/protection);
         then
           set -e
           # 200 OK
@@ -68,7 +92,7 @@ jobs:
         HUB_VERBOSE: 0
       run: |
         set +e
-        if response=$(hub api -X DELETE /repos/${{ github.repository }}/git/refs/heads/${{ github.head_ref }});
+        if response=$(gh api -X DELETE /repos/${{ github.repository }}/git/refs/heads/${{ github.head_ref }});
         then
           set -e
           # 200 OK
@@ -86,34 +110,6 @@ jobs:
             exit 1
           fi
         fi
-
-
-  set-default-branch:
-    # We need to first delete the milestone branch, otherwise it will popup in the next milestone
-    # branch list below
-    needs: delete-milestone-branch
-    name: Set default branch back to master or to next milestone branch
-    runs-on: ubuntu-latest
-    if: ${{ startsWith(github.head_ref, 'develop-') }}
-    steps:
-    - name: Set default branch back to master or to next milestone branch
-      env:
-        GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
-      run: |
-        next_milestone_branch=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/branches | \
-            jq '. | map(select(.name | test("develop-\\d{4}-\\d{2}-\\d{2}"))) | sort_by(.name) | .[0].name ' -r)
-        echo "next_milestone_branch=${next_milestone_branch}"
-        if [[ "${next_milestone_branch}" == "null" ]];
-        then
-          echo "::notice::Set default branch to \"master\""
-          gh repo edit ${{ github.repository }} --default-branch master
-        else
-          echo "::notice::Set default branch to \"${next_milestone_branch}\""
-          gh repo edit ${{ github.repository }} --default-branch "${next_milestone_branch}"
-        fi
-
 
   milestone-release:
     name: Release Milestone
