@@ -58,9 +58,6 @@ jobs:
     if: "${{ needs.get-milestone.outputs.milestone }}"
     runs-on: ubuntu-latest
     steps:
-      - name: Install hub tool
-        run: |
-          sudo apt-get update && sudo apt-get install -y hub
       - name: Create Milestone Branch Protection
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
@@ -81,7 +78,7 @@ jobs:
           END)
           fi
 
-          hub api -i -X PUT /repos/${{ github.repository }}/branches/${{ needs.get-milestone.outputs.branch }}/protection \
+          gh api -i -X PUT /repos/${{ github.repository }}/branches/${{ needs.get-milestone.outputs.branch }}/protection \
             -H "Authorization: token ${GITHUB_TOKEN}" \
             --input "-" <<STDIN
           {
@@ -104,10 +101,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
         run: |
           # Get the next milestone branch
-          next_milestone_branch=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            /repos/${{ github.repository }}/branches | \
-            jq '. | map(select(.name | test("^develop-\\d{4}-\\d{2}-\\d{2}$"))) | sort_by(.name) | .[0].name ' -r)
+          next_milestone_branch=$( \
+            gh api \
+              -H "Accept: application/vnd.github+json" \
+              /repos/${{ github.repository }}/branches \
+            | jq '. | map(select(.name | test("^develop-\\d{4}-\\d{2}-\\d{2}$"))) | sort_by(.name) | .[0].name ' -r \
+          )
           if [[ "${next_milestone_branch}" != "null" ]];
           then
             echo "::notice::Set default branch to \"${next_milestone_branch}\""
