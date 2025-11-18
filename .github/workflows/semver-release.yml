@@ -43,21 +43,12 @@ jobs:
         TAG_CONTEXT: repo
         VERBOSE: true
 
-    - name: Set `New Release` PR title if needed
-      if: ${{ github.base_ref == 'refs/heads/master' }}
-      run: echo "${{ steps.tagging.outputs.new_tag }}"
-
-    # Drafts your next Release notes as Pull Requests are merged into "master"
-    - name: Create Release with Release Notes
-      uses: release-drafter/release-drafter@v6
+    - name: Create new release with auto generated release note
       # Do not generate release for beta release tagged on develop branch.
       if: ${{ github.ref == 'refs/heads/master' }}
-      with:
-        config-name: release-drafter-config.yml
-        disable-autolabeler: true
-        publish: true
-        tag: ${{ steps.tagging.outputs.new_tag }}
-        version: ${{ steps.tagging.outputs.new_tag }}
-        name: ${{ steps.tagging.outputs.new_tag }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # NOTE: the release.yml file used to configure the release notes generator is managed by terraform
+        # in geoadmin/infra-terraform-bgdi repository
+        gh release create "${{ steps.tagging.outputs.new_tag }}" --generate-notes --repo "${{ github.repository }}"
