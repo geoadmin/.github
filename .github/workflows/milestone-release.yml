@@ -145,18 +145,15 @@ jobs:
         milestone_pattern: '\d{4}-\d{2}-\d{2}'
 
     # Drafts your next Release notes as Pull Requests are merged into "master"
-    - name: Create Release with Release Notes
-      uses: release-drafter/release-drafter@v6
-      if: ${{ github.base_ref == 'master' }}
-      with:
-        config-name: release-drafter-config.yml
-        disable-autolabeler: true
-        publish: true
-        tag: ${{ steps.tagging-release.outputs.new_tag }}
-        version: ${{ steps.tagging-release.outputs.new_tag }}
-        name: ${{ steps.tagging-release.outputs.new_tag }}
+    - name: Create new release with auto generated release note
+      # Do not generate release for beta release tagged on develop branch.
+      if: ${{ github.ref == 'refs/heads/master' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # NOTE: the release.yml file used to configure the release notes generator is managed by terraform
+        # in geoadmin/infra-terraform-bgdi repository
+        gh release create "${{ steps.tagging-release.outputs.new_tag }}" --generate-notes --repo "${{ github.repository }}"
 
     # Close the milestone if needed
     - name: Get milestone name from tag
