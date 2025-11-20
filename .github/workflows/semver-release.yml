@@ -29,11 +29,26 @@ jobs:
       with:
         fetch-depth: '10'
 
+    # Here below we check if the last commit message contains the flag #skip-tagging-and-release
+    # If the flag is present, we skip the tagging and release creation
+    # This is needed in order to be able to modify the `release.yml` configuration file that is
+    # managed by terraform and directly push on master branch. Without this the modification of
+    # this configuration file for generating release note would trigger a new empty release.
+    - name: Check last commit message
+      id: commit-message
+      run: |
+        if git log -1 --pretty=%B | grep -qP '(?<!\S)#skip-tagging-and-release(?!\S)'; then
+          echo "skip_release=true" >> $GITHUB_OUTPUT
+        else
+          echo "skip_release=false" >> $GITHUB_OUTPUT
+        fi
+
     # Details and Docu
     # https://github.com/geoadmin/github-tag-action
     # https://github.com/geoadmin/doc-guidelines/blob/master/GIT_FLOW.md#versioning
     - name: Bump version and push tag
       id: tagging
+      if: ${{ steps.commit-message.outputs.skip_release != 'true' }}
       uses: geoadmin/github-tag-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -45,7 +60,7 @@ jobs:
 
     - name: Create new release with auto generated release note
       # Do not generate release for beta release tagged on develop branch.
-      if: ${{ github.ref == 'refs/heads/master' }}
+      if: ${{ github.ref == 'refs/heads/master' && steps.commit-message.outputs.skip_release != 'true' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
