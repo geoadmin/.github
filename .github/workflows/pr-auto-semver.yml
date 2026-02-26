@@ -29,12 +29,13 @@ jobs:
   pr-release-title:
     name: Set PR title
     runs-on: ubuntu-latest
-    if: ${{ github.base_ref == 'master' }}
+    if: |
+      github.base_ref == 'main' &&
+      !startsWith(github.head_ref, 'renovate/')
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
       PR_BODY: ${{ github.event.pull_request.body }}
     steps:
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
