@@ -30,7 +30,7 @@ jobs:
     name: Set PR title
     runs-on: ubuntu-latest
     if: |
-      github.base_ref == 'main' &&
+      github.base_ref == 'master' &&
       !startsWith(github.head_ref, 'renovate/')
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
