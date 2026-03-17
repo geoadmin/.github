@@ -33,15 +33,28 @@ jobs:
       milestone: ${{ steps.action_milestone.outputs.milestone }}
     steps:
       - id: action_milestone
-        uses: iyu/actions-milestone@v1
+        uses: actions/github-script@v8
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          configuration-path: .github/pr-2-milestone-config.yml@master
-          configuration-repo: geoadmin/.github
-          silent: false
-          # Force the milestone overwrite and clear it if no match based on branch name is found
-          force: true
-          clear: true
+          script: |
+            const milestones = await github.rest.issues.listMilestones({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open"
+            });
+
+            const head_branch = context.payload.pull_request.head.ref;
+            const base_branch = context.payload.pull_request.base.ref;
+
+            const match = milestones.data.find(m => head_branch.endsWith(m.title) || base_branch.endsWith(m.title));
+            if (match) {
+              console.log(`Found matching milestone ${match.title}`)
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                milestone: match.number
+              });
+            }
 
   check-open-pr:
     name: Check open PRs
