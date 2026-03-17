@@ -34,7 +34,7 @@ jobs:
   delete-milestone-branch:
     name: Delete Milestone Branch Protection
     runs-on: ubuntu-latest
-    if: ${{ startsWith(github.head_ref, 'develop-') }}
+    if: ${{ github.event.pull_request.merged && startsWith(github.head_ref, 'develop-') }}
     steps:
     - uses: actions/checkout@v4
     # We need first to set the default branch to the next milestone branch or to master otherwise
@@ -114,6 +114,7 @@ jobs:
   milestone-release:
     name: Release Milestone
     runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.merged }}
     steps:
     - name: Check event name
       run: |
