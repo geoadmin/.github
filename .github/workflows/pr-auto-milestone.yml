@@ -33,15 +33,28 @@ jobs:
       milestone: ${{ steps.action_milestone.outputs.milestone }}
     steps:
       - id: action_milestone
-        uses: iyu/actions-milestone@v1
+        uses: actions/github-script@v8
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          configuration-path: .github/pr-2-milestone-config.yml@master
-          configuration-repo: geoadmin/.github
-          silent: false
-          # Force the milestone overwrite and clear it if no match based on branch name is found
-          force: true
-          clear: true
+          script: |
+            const milestones = await github.rest.issues.listMilestones({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open"
+            });
+
+            const head_branch = context.payload.pull_request.head.ref;
+            const base_branch = context.payload.pull_request.base.ref;
+
+            const match = milestones.data.find(m => head_branch.endsWith(m.title) || base_branch.endsWith(m.title));
+            if (match) {
+              console.log(`Found matching milestone ${match.title}`)
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                milestone: match.number
+              });
+            }
 
   check-open-pr:
     name: Check open PRs
@@ -69,13 +82,13 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.base_ref == 'master' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Bump version (without tagging)
         id: get_tag
-        uses: geoadmin/action-milestone-tag@v1.5.0
+        uses: geoadmin/action-milestone-tag@v1.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           custom_tag: '${MILESTONE}-rc${TAG_NUMBER}'
@@ -98,11 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: PR Auto Labeler
-        uses: release-drafter/release-drafter@v6
+        uses: release-drafter/release-drafter/autolabeler@v7
         with:
-          config-name: release-drafter-labeler-config.yml
-          disable-autolabeler: false
-          disable-releaser: true
-
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          config-name: .github:/.github/release-drafter-labeler-config.yml
+          token: ${{ secrets.GITHUB_TOKEN }}
