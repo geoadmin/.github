@@ -130,7 +130,7 @@ jobs:
     - name: Bump Milestone Release Tag
       id: tagging-release
       if: ${{ github.base_ref == 'master' }}
-      uses: geoadmin/action-milestone-tag@v1.5.0
+      uses: geoadmin/action-milestone-tag@v1.6.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         custom_tag: '${MILESTONE}-rc${TAG_NUMBER}'
@@ -139,7 +139,7 @@ jobs:
     - name: Bump Milestone Beta Tag
       id: tagging-beta
       if: ${{ startsWith(github.base_ref, 'develop-') }}
-      uses: geoadmin/action-milestone-tag@v1.5.0
+      uses: geoadmin/action-milestone-tag@v1.6.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         custom_tag: '${MILESTONE}-beta${TAG_NUMBER}'
