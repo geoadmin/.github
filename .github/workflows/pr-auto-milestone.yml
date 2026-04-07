@@ -44,6 +44,7 @@ jobs:
 
             const head_branch = context.payload.pull_request.head.ref;
             const base_branch = context.payload.pull_request.base.ref;
+            console.log(`Looking for milestone matching head branch ${head_branch} or base branch ${base_branch}`)
 
             const match = milestones.data.find(m => head_branch.endsWith(m.title) || base_branch.endsWith(m.title));
             if (match) {
@@ -53,6 +54,14 @@ jobs:
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
                 milestone: match.number
+              });
+            } else if (base_branch === "master") {
+              console.log(`No matching milestone found, but base branch is master, clearing milestone`)
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                milestone: null
               });
             }
 
