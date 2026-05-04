@@ -33,7 +33,7 @@ jobs:
       milestone: ${{ steps.action_milestone.outputs.milestone }}
     steps:
       - id: action_milestone
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const milestones = await github.rest.issues.listMilestones({
@@ -46,17 +46,19 @@ jobs:
             const base_branch = context.payload.pull_request.base.ref;
             console.log(`Looking for milestone matching head branch ${head_branch} or base branch ${base_branch}`)
 
+            let milestone = null;
             const match = milestones.data.find(m => head_branch.endsWith(m.title) || base_branch.endsWith(m.title));
             if (match) {
-              console.log(`Found matching milestone ${match.title}`)
+              console.log(`Found matching milestone ${match.title}`);
               await github.rest.issues.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
                 milestone: match.number
               });
+              milestone = match.title;
             } else if (base_branch === "master") {
-              console.log(`No matching milestone found, but base branch is master, clearing milestone`)
+              console.log(`No matching milestone found, but base branch is master, clearing milestone`);
               await github.rest.issues.update({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -64,6 +66,8 @@ jobs:
                 milestone: null
               });
             }
+            // Set the output
+            core.setOutput('milestone', milestone);
 
   check-open-pr:
     name: Check open PRs
