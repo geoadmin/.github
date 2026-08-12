@@ -1,0 +1,39 @@
+name: PR Labels and Content Reusable Workflow for infra repository
+
+# Validate the PR content: title pattern, description not empty and commit message patterns.
+#
+# Add a Label to the PR based on HEAD branch name. These labels are then used to categorize
+# the release notes.
+#
+# Check the labels against labels for release note categorization and merge guards
+#
+# NOTE: Even if we don't use release notes on infra repository it is good to keep the same PR
+# quality as for release note to enforce a good code documentation via PR.
+
+# NOTE: this workflow only works for github pull_request trigger
+
+# Usage example:
+# on:
+#   pull_request:
+#     types:
+#       - opened
+#       - reopened
+#       - synchronize
+#       - edited
+#       - labeled
+#       - unlabeled
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
+
+on:
+  workflow_call:
+
+jobs:
+  content:
+    uses: ./.github/workflows/pr-content.yml
+
+  labels:
+    uses: ./.github/workflows/pr-labels.yml
