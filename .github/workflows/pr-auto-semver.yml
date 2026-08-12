@@ -8,8 +8,12 @@ name: PR Auto Label and SemVer Release Title Reusable Workflow
 #
 # For hotfix (hotfix-* -> master PR) the title is set to `<next-version> - <original-title> - <bump-type>`
 #
-# Finally add a Label to the PR based on HEAD branch name. These labels are then used to categorize
+# Validate the PR content: title pattern, description not empty and commit message patterns.
+#
+# Add a Label to the PR based on HEAD branch name. These labels are then used to categorize
 # the release notes.
+#
+# Check the labels against labels for release not categorization and merge guards
 
 # NOTE: this workflow only works for github pull_request trigger
 
@@ -21,13 +25,22 @@ name: PR Auto Label and SemVer Release Title Reusable Workflow
 #       - reopened
 #       - synchronize
 #       - edited
+#       - labeled
+#       - unlabeled
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
 
 on:
   workflow_call:
 
 jobs:
-  pr-release-title:
+  release-title:
     name: Set PR title
+    # Here below we cannot use ubuntu-slim because geoadmin/github-tag-action requires to run docker
+    # and ubuntu-slim does not support to run docker in docker !
     runs-on: ubuntu-latest
     if: |
       github.base_ref == 'master' &&
@@ -35,8 +48,9 @@ jobs:
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
       PR_BODY: ${{ github.event.pull_request.body }}
+      HEAD_REF: ${{ github.head_ref }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: master
@@ -49,8 +63,8 @@ jobs:
           cd "${GITHUB_WORKSPACE}"
           git config user.email "github@swisstopo.ch"
           git config user.name "Github PR Auto Title Workflow"
-          git fetch origin ${{ github.head_ref }}:${{ github.head_ref }}
-          git merge ${{ github.head_ref }} --no-ff -m "${PR_TITLE}\n\n${PR_BODY}"
+          git fetch origin "${HEAD_REF}:${HEAD_REF}"
+          git merge "${HEAD_REF}" --no-ff -m "${PR_TITLE}\n\n${PR_BODY}"
 
       - name: Get Default Bump Type from PR and get PR Title
         id: bump_type
@@ -58,7 +72,7 @@ jobs:
           bump_type=minor
 
           # Set default bump type for hotfixes
-          case "${{ github.head_ref }}" in
+          case "${HEAD_REF}" in
             hotfix* | bugfix* | bug* | fix* | dependabot/*)
               bump_type=patch
               echo "Hotfix branch detected set default bump to ${bump_type}"
@@ -128,12 +142,10 @@ jobs:
             --method "PATCH" \
             -f 'title=${{ steps.bump_type.outputs.pr_title }} - #${{ steps.get_tag.outputs.part }}'
 
-  pr-labeler:
-    name: Set PR label
-    runs-on: ubuntu-latest
-    steps:
-      - name: PR Auto Labeler
-        uses: release-drafter/release-drafter/autolabeler@v7
-        with:
-          config-name: .github:/.github/release-drafter-labeler-config.yml
-          token: ${{ secrets.GITHUB_TOKEN }}
+  content:
+    # Do not validate PR content for release PR (develop -> master)
+    if: ${{ !(github.head_ref == 'develop' && github.base_ref == 'master') }}
+    uses: ./.github/workflows/pr-content.yml
+
+  labels:
+    uses: ./.github/workflows/pr-labels.yml
