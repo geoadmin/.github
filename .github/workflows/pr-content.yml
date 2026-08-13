@@ -1,0 +1,123 @@
+name: PR Content Validation Reusable Workflow
+
+# Validate the PR content as follow:
+# - PR title matches the pattern ^(((<jira_project_keys>)-\d+)+|chore): .+$ and does not contain "wip"
+# - PR description is not empty
+# - All commit messages match the same pattern as the PR title
+
+# NOTES:
+#  - this workflow only works for github pull_request trigger
+
+# Usage example:
+# on:
+#   pull_request:
+#     types:
+#       - opened
+#       - reopened
+#       - edited
+
+permissions:
+  pull-requests: read
+
+on:
+  workflow_call:
+    inputs:
+      jira_project_keys:
+        description: 'JSON array of Jira project keys allowed as issue reference in the PR title and commit messages'
+        type: string
+        default: '["PB", "GPS", "HDG", "IGI_SB", "BGDIDIC"]'
+
+jobs:
+  title:
+    name: Validate PR title
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check PR title pattern
+        uses: actions/github-script@v9
+        env:
+          JIRA_PROJECT_KEYS: ${{ inputs.jira_project_keys }}
+        with:
+          script: |
+            // Example of PR titles:
+            //   ✅ GPS-123: Add feature X
+            //   ❌ GPS-123 Add feature X
+            //   ❌ GPS-123:
+            //   ✅ chore: Update library Y
+            //   ❌ CHORE: Update library Y
+            //   ❌ no-issue: Update library Y
+            //   ❌ GPS-123: Add feature X (wip)
+
+            const title = context.payload.pull_request.title;
+            const jiraProjectKeys = JSON.parse(process.env.JIRA_PROJECT_KEYS);
+            const titlePattern = new RegExp(`^(((${jiraProjectKeys.join("|")})-\\d+)+|chore(\\(deps\\))?): .+$`);
+
+            if (!titlePattern.test(title)) {
+              core.setFailed(`PR title "${title}" does not match the required pattern: ${titlePattern}`);
+              return;
+            }
+
+            if (/\bwip\b/i.test(title)) {
+              core.setFailed(`PR title "${title}" must not contain "wip"`);
+              return;
+            }
+
+            core.info(`PR title "${title}" is valid`);
+
+  description:
+    name: Validate PR description
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check PR description is not empty
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const body = (context.payload.pull_request.body || "").trim();
+
+            if (body.length === 0) {
+              core.setFailed("PR description must not be empty");
+              return;
+            }
+
+            core.info("PR description is not empty");
+
+  commits:
+    name: Validate commit messages
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check all commit messages pattern
+        uses: actions/github-script@v9
+        env:
+          JIRA_PROJECT_KEYS: ${{ inputs.jira_project_keys }}
+        with:
+          script: |
+            if (
+              context.payload.pull_request.head.ref === 'master' &&
+              (
+                context.payload.pull_request.base.ref === 'develop' ||
+                context.payload.pull_request.base.ref.startsWith('develop-')
+              )
+            ) {
+              core.notice('Skipping commit message check for master -> develop PR');
+              return;
+            }
+
+            const jiraProjectKeys = JSON.parse(process.env.JIRA_PROJECT_KEYS);
+            const titlePattern = new RegExp(`^(((${jiraProjectKeys.join("|")})-\\d+)+|chore(\\(deps\\))?): .+$`);
+
+            const commits = await github.paginate(github.rest.pulls.listCommits, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            const invalidCommits = commits
+              .map((commit) => ({ sha: commit.sha, subject: commit.commit.message.split("\n")[0] }))
+              .filter(({ subject }) => !titlePattern.test(subject));
+
+            if (invalidCommits.length > 0) {
+              const details = invalidCommits.map(({ sha, subject }) => `${sha.substring(0, 7)}: ${subject}`).join("\n");
+              core.setFailed(`The following commits do not match the required pattern ${titlePattern}:\n${details}`);
+              return;
+            }
+
+            core.info(`All ${commits.length} commit(s) match the required pattern`);

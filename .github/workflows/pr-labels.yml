@@ -1,0 +1,108 @@
+name: PR Label Validation Reusable Workflow
+
+# Validate the PR labels as follow:
+# - Has at least 1 label
+# - Don't have a merge guard label
+# - Has one Release Note categorisation label and only one
+
+
+# NOTES:
+#  - this workflow only works for github pull_request trigger
+
+# Usage example:
+# on:
+#   pull_request:
+#     types:
+#       - open
+#       - reopen
+#       - labeled
+#       - unlabeled
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
+
+on:
+  workflow_call:
+    inputs:
+      rn_categorization_labels:
+        description: 'JSON array of labels use to categorize release notes; exactly one must be present on the PR'
+        type: string
+        default: '["bug", "feature", "new-release", "data-integration", "breaking-change", "dependencies"]'
+      merge_guard_labels:
+        description: 'JSON array of labels used to prevent accidental merge'
+        type: string
+        default: '["DO NOT MERGE :bomb:", "WIP :construction:", "POC", "RFC"]'
+      skip_rn_labels:
+        description: 'JSON array of labels that skip the PR from the release notes'
+        type: string
+        default: '["refactoring", "skip-release-note", "new-release"]'
+
+jobs:
+  labeler:
+    name: Set PR label
+    if: ${{ github.event.pull_request.state == 'open' }}
+    runs-on: ubuntu-slim
+    steps:
+      - name: PR Auto Labeler
+        uses: release-drafter/release-drafter/autolabeler@v7
+        with:
+          config-name: release-drafter-labeler-config.yml
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  labels-check:
+    name: Validate PR labels
+    # Wait for labeler so freshly auto-assigned labels are visible to the check.
+    needs: labeler
+    runs-on: ubuntu-slim
+    steps:
+      - name: Check PR labels
+        uses: actions/github-script@v9
+        env:
+          rn_categorization_labels: ${{ inputs.rn_categorization_labels }}
+          merge_guard_labels: ${{ inputs.merge_guard_labels }}
+          skip_rn_labels: ${{ inputs.skip_rn_labels }}
+        with:
+          script: |
+            // Every PR is also an issue in GitHub's API, so the issues endpoint returns PR labels too.
+            const { data: issueLabels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const labels = issueLabels.map((label) => label.name);
+            core.info(`PR labels: ${JSON.stringify(labels)}`);
+
+            if (labels.length === 0) {
+              core.setFailed(`PR has no labels`);
+              return;
+            }
+
+            const guardLabels = JSON.parse(process.env.merge_guard_labels);
+            const guardLabelFound = guardLabels.find(label => labels.includes(label));
+            if (guardLabelFound) {
+              core.setFailed(`PR has merge guard label: ${guardLabelFound}`);
+              return;
+            }
+
+            const rnCategoryLabels = JSON.parse(process.env.rn_categorization_labels);
+            const rnCategoryFound = rnCategoryLabels.filter((label) => labels.includes(label));
+
+            if (rnCategoryFound.length > 1) {
+              core.setFailed(`PR must have only one of the release note category labels: ${rnCategoryLabels.join(", ")}`);
+              return;
+            }
+
+            const skipRnLabels = JSON.parse(process.env.skip_rn_labels);
+            const skipRnLabelFound = skipRnLabels.find(label => labels.includes(label));
+
+            if (rnCategoryFound.length === 0 && skipRnLabelFound.length === 0) {
+              const message =
+                "PR has no release note category label and no skip release note label; " +
+                `expected one of: ${rnCategoryLabels.join(", ")}, or one of: ${skipRnLabels.join(", ")}`;
+              core.setFailed(message);
+              return;
+            }
+
+            core.info(`PR label check passed`);

@@ -9,8 +9,12 @@ name: PR Auto Label, Milestone and Title Reusable Workflow
 #   - For new release (develop-* -> master PR) the title is set to `New Release <next-version>`
 #   - For hotfix (hotfix-* -> master PR) the title is set to `<next-version> - <original-title>`
 #
-# Finally add a Label to the PR based on HEAD branch name. These labels are then used to categorize
+# Validate the PR content: title pattern, description not empty and commit message patterns.
+#
+# Add a Label to the PR based on HEAD branch name. These labels are then used to categorize
 # the release notes.
+#
+# Check the labels against labels for release not categorization and merge guards
 
 
 # Usage example:
@@ -21,6 +25,13 @@ name: PR Auto Label, Milestone and Title Reusable Workflow
 #       - reopened
 #       - synchronize
 #       - edited
+#       - labeled
+#       - unlabeled
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
 
 on:
   workflow_call:
@@ -95,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.base_ref == 'master' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -119,12 +130,10 @@ jobs:
             --method "PATCH" \
             -f 'title=New Release ${{ steps.get_tag.outputs.new_tag }}'
 
-  pr-labeler:
-    name: Set PR label
-    runs-on: ubuntu-latest
-    steps:
-      - name: PR Auto Labeler
-        uses: release-drafter/release-drafter/autolabeler@v7
-        with:
-          config-name: .github:/.github/release-drafter-labeler-config.yml
-          token: ${{ secrets.GITHUB_TOKEN }}
+  content:
+    # Do not validate PR content for release PR (develop -> master or develop-* -> master)
+    if: ${{ !((github.head_ref == 'develop' || startsWith(github.head_ref, 'develop-')) && github.base_ref == 'master') }}
+    uses: ./.github/workflows/pr-content.yml
+
+  labels:
+    uses: ./.github/workflows/pr-labels.yml

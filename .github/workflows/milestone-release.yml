@@ -24,6 +24,10 @@ name: Milestone Release Reusable Workflow
 #     uses: geoadmin/.github/.github/workflows/milestone-release.yml@master
 #     secrets: inherit
 
+permissions:
+  contents: write
+  issues: write
+
 on:
   workflow_call:
     secrets:
@@ -36,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.pull_request.merged && startsWith(github.head_ref, 'develop-') }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     # We need first to set the default branch to the next milestone branch or to master otherwise
     # we cannot delete the current default branch (the milestone branch).
     - name: Set default branch back to master or to next milestone branch
@@ -125,7 +129,7 @@ jobs:
         fi
 
     - name: Checkout code
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
 
     - name: Bump Milestone Release Tag
       id: tagging-release
