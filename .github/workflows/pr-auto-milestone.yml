@@ -132,7 +132,8 @@ jobs:
 
   content:
     # Do not validate PR content for release PR (develop -> master or develop-* -> master)
-    if: ${{ !((github.head_ref == 'develop' || startsWith(github.head_ref, 'develop-')) && github.base_ref == 'master') }}
+    # and avoid dependency bot PRs, which follow automation-generated branch naming.
+    if: ${{ !((github.head_ref == 'develop' || startsWith(github.head_ref, 'develop-')) && github.base_ref == 'master') && !startsWith(github.head_ref, 'dependabot/') }}
     uses: ./.github/workflows/pr-content.yml
 
   labels:
