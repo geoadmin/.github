@@ -115,8 +115,12 @@ jobs:
             });
 
             const invalidCommits = commits
-              .map((commit) => ({ sha: commit.sha, subject: commit.commit.message.split("\n")[0] }))
-              .filter(({ subject }) => !titlePattern.test(subject));
+              .map((commit) => ({
+                sha: commit.sha,
+                subject: commit.commit.message.split("\n")[0],
+                isMerge: commit.parents.length > 1,
+              }))
+              .filter(({ subject, isMerge }) => !isMerge && !titlePattern.test(subject));
 
             if (invalidCommits.length > 0) {
               const details = invalidCommits.map(({ sha, subject }) => `${sha.substring(0, 7)}: ${subject}`).join("\n");
