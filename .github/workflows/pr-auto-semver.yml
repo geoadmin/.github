@@ -44,7 +44,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.base_ref == 'master' &&
-      !startsWith(github.head_ref, 'renovate/')
+      !startsWith(github.head_ref, 'renovate/') &&
+      !startsWith(github.head_ref, 'dependabot/')
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
       PR_BODY: ${{ github.event.pull_request.body }}
@@ -144,7 +145,8 @@ jobs:
 
   content:
     # Do not validate PR content for release PR (develop -> master)
-    if: ${{ !(github.head_ref == 'develop' && github.base_ref == 'master') }}
+    # and skip dependency-update automation branches.
+    if: ${{ !(github.head_ref == 'develop' && github.base_ref == 'master') && !startsWith(github.head_ref, 'dependabot/') }}
     uses: ./.github/workflows/pr-content.yml
 
   labels:
