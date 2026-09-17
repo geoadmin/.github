@@ -48,6 +48,12 @@ jobs:
             //   ❌ GPS-123: Add feature X (wip)
 
             const title = context.payload.pull_request.title;
+
+            if (context.payload.pull_request.head.ref.startsWith('dependabot/')) {
+              core.notice(`Skipping PR title validation for Dependabot PR "${title}"`);
+              return;
+            }
+
             const jiraProjectKeys = JSON.parse(process.env.JIRA_PROJECT_KEYS);
             const titlePattern = new RegExp(
               `^(((${jiraProjectKeys.join("|")})-\\d+)+|(chore|fix|feat|revert|docs)(\\([^()]+\\))?): .+$`
@@ -73,6 +79,11 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
+            if (context.payload.pull_request.head.ref.startsWith('dependabot/')) {
+              core.notice('Skipping PR description check for Dependabot PR');
+              return;
+            }
+
             const body = (context.payload.pull_request.body || "").trim();
 
             if (body.length === 0) {
@@ -100,6 +111,11 @@ jobs:
               )
             ) {
               core.notice('Skipping commit message check for master -> develop PR');
+              return;
+            }
+
+            if (context.payload.pull_request.head.ref.startsWith('dependabot/')) {
+              core.notice('Skipping commit message check for Dependabot PR');
               return;
             }
 
