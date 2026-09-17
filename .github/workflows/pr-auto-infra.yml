@@ -33,6 +33,8 @@ on:
 
 jobs:
   content:
+    # Skip dependency-update automation branches, same as the milestone and semver workflows.
+    if: ${{ !startsWith(github.head_ref, 'dependabot/') }}
     uses: ./.github/workflows/pr-content.yml
 
   labels:
