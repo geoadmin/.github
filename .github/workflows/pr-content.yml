@@ -56,7 +56,7 @@ jobs:
 
             const jiraProjectKeys = JSON.parse(process.env.JIRA_PROJECT_KEYS);
             const titlePattern = new RegExp(
-              `^(((${jiraProjectKeys.join("|")})-\\d+)+|(chore|fix|feat|revert|docs|Revert ")(\\([^()]+\\))?): .+$`
+              `^((((${jiraProjectKeys.join("|")})-\\d+)+|(chore|fix|feat|revert|docs)(\\([^()]+\\))?): |Revert ").+$`
             );
 
             if (!titlePattern.test(title)) {
@@ -121,7 +121,7 @@ jobs:
 
             const jiraProjectKeys = JSON.parse(process.env.JIRA_PROJECT_KEYS);
             const titlePattern = new RegExp(
-              `^(((${jiraProjectKeys.join("|")})-\\d+)+|(chore|fix|feat|revert|docs|Revert ")(\\([^()]+\\))?): .+$`
+              `^((((${jiraProjectKeys.join("|")})-\\d+)+|(chore|fix|feat|revert|docs)(\\([^()]+\\))?): |Revert ").+$`
             );
 
             const commits = await github.paginate(github.rest.pulls.listCommits, {
