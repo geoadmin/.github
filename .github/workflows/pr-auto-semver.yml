@@ -44,8 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.base_ref == 'master' &&
-      !startsWith(github.head_ref, 'renovate/') &&
-      !startsWith(github.head_ref, 'dependabot/')
+      !startsWith(github.head_ref, 'renovate/')
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
       PR_BODY: ${{ github.event.pull_request.body }}
